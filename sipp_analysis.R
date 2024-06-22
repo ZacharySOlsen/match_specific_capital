@@ -36,14 +36,22 @@ columns = fwf_positions(start = start_position_08, end_position_08,
                         col_names = column_names)
 
 # File Paths to the 16 data sets
-data_files = list("2008_wave/l08puw1/l08puw1.dat", "2008_wave/l08puw2/l08puw2.dat",
-                  "2008_wave/l08puw3/l08puw3.dat", "2008_wave/l08puw4/l08puw4.dat",
-                  "2008_wave/l08puw5/l08puw5.dat", "2008_wave/l08puw6/l08puw6.dat",
-                  "2008_wave/l08puw7/l08puw7.dat", "2008_wave/l08puw8/l08puw8.dat",
-                  "2008_wave/l08puw9/l08puw9.dat", "2008_wave/l08puw10/l08puw10.dat",
-                  "2008_wave/l08puw11/l08puw11.dat", "2008_wave/l08puw12/l08puw12.dat",
-                  "2008_wave/l08puw13/l08puw13.dat", "2008_wave/l08puw14/l08puw14.dat",
-                  "2008_wave/l08puw15/l08puw15.dat", "2008_wave/l08puw16/l08puw16.dat")
+data_files = list("/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw1/l08puw1.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw2/l08puw2.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw3/l08puw3.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw4/l08puw4.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw5/l08puw5.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw6/l08puw6.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw7/l08puw7.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw8/l08puw8.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw9/l08puw9.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw10/l08puw10.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw11/l08puw11.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw12/l08puw12.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw13/l08puw13.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw14/l08puw14.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw15/l08puw15.dat",
+                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw16/l08puw16.dat")
 
 # For loop to upload all of the data
 job_data_08 = tibble()
