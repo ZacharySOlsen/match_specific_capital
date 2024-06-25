@@ -11,19 +11,15 @@ library(tidyverse)
 
 # Defining Columns we want to import from SIPP
 
-# Column start positions for 2008 Wave 1 variables
-start_position_08 = c(897, 974, 888, 965, 921, 998, 906, 983, 934, 1011, 859, 950,
-                      1027, 955, 1032, 786, 795, 1617, 1623, 855, 801, 849, 836,
-                      579, 518, 520, 522, 648, 528, 2336, 26, 28, 6, 500, 503)
+# Column start positions for 2008 variables.
+start_position_04 = c(887, 963, 878, 954, 911, 987, 896, 972, 925, 1001, 849, 941,
+                      1017, 945, 1021, 780, 1486, 1492, 845, 794, 839, 829, 575,
+                      531, 533, 535, 644, 2188, 26, 28, 6, 513, 516)
 
-# Column end positions for 2008 Wave 1 variables.
-end_position_08 = c(904, 981, 895, 972, 923, 1000, 907, 984, 938, 1015, 860, 953,
-                    1030, 958, 1035, 787, 796, 1621, 1627, 856, 802, 853, 837,
-                    580, 518, 520, 523, 655, 529, 2337, 27, 31, 17, 502, 506)
-
-
-
-
+# Column end positions for 2008 variables.
+end_position_04 = c(894, 970, 885, 961, 914, 990, 897, 973, 929, 1005, 850, 943,
+                    1019, 947, 1023, 781, 1490, 1496, 846, 795, 843, 830, 576, 531,
+                    533, 536, 651, 2189, 27, 31, 17, 515, 519)
 
 # Variable Names
 column_names = c("end_date_job_1_TEJDATE1", "end_date_job_2_TEJDATE2",
@@ -33,37 +29,28 @@ column_names = c("end_date_job_1_TEJDATE1", "end_date_job_2_TEJDATE2",
                  "job_earnings_TPMSUM1", "job_earnings_TPMSUM2",
                  "employment_status_RMESR", "ind_code_EJBIND1", "ind_code_EJBIND2",
                  "occup_code_TJBOCC1", "occup_code_TJBOCC2", "highest_educ_EEDUCATE",
-                 "vocation_RCOLLVOC", "amount_state_unemp_T05AMT",
-                 "amount_supp_unemp_T06AMT", "unknown_job_date_EBFLAG",
-                 "labor_force_imputation_EPPFLAG", "income_from_extra_job_TMLMSUM",
-                 "time_layoff_ELAYOFF", "age_TAGE", "sex_ESEX", "race_ERACE",
-                 "hispanic_EORIGIN", "total_person_income_TPTOTINC", "citizen_ECITIZEN",
+                 "amount_state_unemp_T05AMT", "amount_other_unemp_T07AMT",
+                 "unknown_job_date_EBFLAG", "labor_force_imputation_EPPFLAG",
+                 "income_from_extra_job_TMLMSUM", "time_layoff_ELAYOFF", "age_TAGE",
+                 "sex_ESEX", "race_ERACE", "hispanic_EORIGIN", 
+                 "total_person_income_TPTOTINC",
                  "longitudinal_month_LGTMON", "calendar_month_RHCALMN",
                  "calendar_year_RHCALYR", "SSUID", "EENTAID", "EPPPNUM")
 
-columns = fwf_positions(start = start_position_08, end_position_08, 
+columns = fwf_positions(start = start_position_04, end_position_04, 
                         col_names = column_names)
 
-# File Paths to the 16 data sets
-data_files = list("/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw1/l08puw1.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw2/l08puw2.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw3/l08puw3.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw4/l08puw4.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw5/l08puw5.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw6/l08puw6.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw7/l08puw7.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw8/l08puw8.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw9/l08puw9.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw10/l08puw10.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw11/l08puw11.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw12/l08puw12.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw13/l08puw13.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw14/l08puw14.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw15/l08puw15.dat",
-                  "/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2008_wave/l08puw16/l08puw16.dat")
+# Loading file path names
+data_files = c()
+for (i in 1:9) {
+  dat_stor = paste("/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2001_wave/l01puw", sep = "", i)
+  dat_stor2 = paste(dat_stor, sep = "/", "l01puw")
+  dat_stor_3 = paste(dat_stor2, sep = "", i)
+  data_files[i] = paste(dat_stor_3, sep = ".", "dat")
+}
 
 # For loop to upload all of the data
-job_data_08 = tibble()
+job_data_01 = tibble()
 
 for (i in seq(data_files)) {
   
@@ -74,7 +61,7 @@ for (i in seq(data_files)) {
   
   data_stor = as.tibble(sapply(data_stor, as.numeric))
   
-  job_data_08 = bind_rows(job_data_08, data_stor)
+  job_data_01 = bind_rows(job_data_01, data_stor)
   
   # Clearing variable to save memory.
   rm(data_stor)
@@ -82,8 +69,8 @@ for (i in seq(data_files)) {
 
 
 # Splitting data into observations with job end dates and job start dates.
-end_date_obs = job_data_08 |> filter(end_date_job_1_TEJDATE1 != -1) |> filter(reason_separation_ERSEND1 %in% c(8, 9))
-start_date_obs = job_data_08 |> filter(start_date_job_1_TSJDATE1 > 20080101)
+end_date_obs = job_data_01 |> filter(end_date_job_1_TEJDATE1 != -1) |> filter(reason_separation_ERSEND1 %in% c(8, 9))
+start_date_obs = job_data_01 |> filter(start_date_job_1_TSJDATE1 > 20001001)
 
 # Lists of unique person identifiers for those who have a end job date that was do to some undesired separation.
 end_distinct_SSUID = end_date_obs |> distinct(SSUID)
@@ -128,6 +115,7 @@ nearest_date = nearest_date |> distinct(SSUID, EENTAID, EPPPNUM, end_date_job_1_
 # And it is cleaned!!!
 
 # Summary Stats and change percent change in wages.
+
 nearest_date = nearest_date |> rename(job_earnings_TPMSUM1_old  = job_earnings_TPMSUM1.x) |> rename(job_earnings_TPMSUM1_new = job_earnings_TPMSUM1.y)
 
 nearest_date = nearest_date |> filter(job_earnings_TPMSUM1_old != 0) |> filter(job_earnings_TPMSUM1_new != 0)
