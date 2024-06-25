@@ -12,25 +12,34 @@ library(tidyverse)
 # Defining Columns we want to import from SIPP
 
 # Column start positions for 2008 Wave 1 variables
-start_position_08 = c(934, 1011, 897, 974, 950, 1027, 921, 998, 906, 983, 955,
-                         1032, 888, 965, 885, 962, 786, 795, 1617, 1623, 855,
-                         836, 2336, 6, 500, 503, 579, 859)
+start_position_08 = c(897, 974, 888, 965, 921, 998, 906, 983, 934, 1011, 859, 950,
+                      1027, 955, 1032, 786, 795, 1617, 1623, 855, 801, 849, 836,
+                      579, 518, 520, 522, 648, 528, 2336, 26, 28, 6, 500, 503)
 
 # Column end positions for 2008 Wave 1 variables.
-end_position_08 = c(938, 1015, 904, 981, 953, 1030, 923, 1000, 907, 984, 958,
-                       1035, 895, 972, 886, 963, 787, 796, 1621, 1627, 856, 837,
-                       2337, 17, 502, 506, 580, 860)
+end_position_08 = c(904, 981, 895, 972, 923, 1000, 907, 984, 938, 1015, 860, 953,
+                    1030, 958, 1035, 787, 796, 1621, 1627, 856, 802, 853, 837,
+                    580, 518, 520, 523, 655, 529, 2337, 27, 31, 17, 502, 506)
+
+
+
+
 
 # Variable Names
-column_names = c("month_earnings_1", "month_earnings_2", "job_end_date_1", 
-                 "job_end_date_2", "industry_code_1", "industry_code_2", 
-                 "job_duration_1", "job_duration_2", "reason_separation_1", 
-                 "reason_separation_2", "occupation_classification_code_1", 
-                 "occupation_classification_code_2", "job_start_date_1", 
-                 "job_start_date_2", "still_employed_1", "still_employed_2", "educ",
-                 "vocational", "amount_state_unemp", "amount_supplement_unemp", 
-                 "unknown_job_dates", "time_layoff_job", "longitudinal_month", 
-                 "SSUID", "EENTAID", "EPPPNUM", "age", "empolyment_status")
+column_names = c("end_date_job_1_TEJDATE1", "end_date_job_2_TEJDATE2",
+                 "start_date_job_1_TSJDATE1", "start_date_job_2_TSJDATE2",
+                 "job_duration_1_EOCCTIM1", "job_duration_2_EOCCTIM2",
+                 "reason_separation_ERSEND1", "reason_separation_ERSEND2",
+                 "job_earnings_TPMSUM1", "job_earnings_TPMSUM2",
+                 "employment_status_RMESR", "ind_code_EJBIND1", "ind_code_EJBIND2",
+                 "occup_code_TJBOCC1", "occup_code_TJBOCC2", "highest_educ_EEDUCATE",
+                 "vocation_RCOLLVOC", "amount_state_unemp_T05AMT",
+                 "amount_supp_unemp_T06AMT", "unknown_job_date_EBFLAG",
+                 "labor_force_imputation_EPPFLAG", "income_from_extra_job_TMLMSUM",
+                 "time_layoff_ELAYOFF", "age_TAGE", "sex_ESEX", "race_ERACE",
+                 "hispanic_EORIGIN", "total_person_income_TPTOTINC", "citizen_ECITIZEN",
+                 "longitudinal_month_LGTMON", "calendar_month_RHCALMN",
+                 "calendar_year_RHCALYR", "SSUID", "EENTAID", "EPPPNUM")
 
 columns = fwf_positions(start = start_position_08, end_position_08, 
                         col_names = column_names)
@@ -72,45 +81,54 @@ for (i in seq(data_files)) {
 }
 
 
-# Creating Column Names
-num_suffixes = 64
+# Splitting data into observations with job end dates and job start dates.
+end_date_obs = job_data_08 |> filter(end_date_job_1_TEJDATE1 != -1) |> filter(reason_separation_ERSEND1 %in% c(8, 9))
+start_date_obs = job_data_08 |> filter(start_date_job_1_TSJDATE1 > 20080101)
 
-# Taking out identification variables.
+# Lists of unique person identifiers for those who have a end job date that was do to some undesired separation.
+end_distinct_SSUID = end_date_obs |> distinct(SSUID)
+end_distinct_EENTAID = end_date_obs |> distinct(EENTAID)
+end_distinct_EPPPNUM = end_date_obs |> distinct(EPPPNUM)
 
-column_names_no_id = column_names[ -c(23, 24, 25, 26)]
+# Filtering out starts that don't match unique person identifiers in the end job group.
+start_date_obs_filtered = start_date_obs |> filter(SSUID %in% end_distinct_SSUID$SSUID) |> filter(EENTAID %in% end_distinct_EENTAID$EENTAID) |> filter(EPPPNUM %in% end_distinct_EPPPNUM$EPPPNUM)
 
-column_names_month = lapply(1:num_suffixes, function(i) {paste(column_names_no_id, i, sep = "_m")}) |> unlist()
+rm(start_date_obs)
+# Lists of unique person identifiers for those who started a job after 01/01/2008.
 
-# Filtering observations by month.
-for (i in 1:64) {
-  
-  # Filter Month
-  month = i
-  
-  # Vector name index
-  start_num = 1 + (i - 1) * 24
-  
-  end_num = 24 + (i - 1) * 24
-  data_stor = job_data_08 |> filter(longitudinal_month == month) |> select(!longitudinal_month) |> rename_with(.fn = ~ column_names_month[start_num:end_num], .cols = column_names_no_id)
-  
-  var_name = paste("job_data_08", i, sep = "_m")
-  assign(var_name, data_stor)
-}
+start_distinct_SSUID = start_date_obs_filtered |> distinct(SSUID)
+start_distinct_EENTAID = start_date_obs_filtered |> distinct(EENTAID)
+start_distinct_EPPPNUM = start_date_obs_filtered |> distinct(EPPPNUM)
 
-# Joining together tables
-by = join_by(SSUID, EENTAID, EPPPNUM)
+# Filtering out observations in the end job group that don't have unique person identifiers for those in the filtered start group.
+end_date_obs_filtered = end_date_obs |> filter(SSUID %in% start_distinct_SSUID$SSUID) |> filter(EENTAID %in% start_distinct_EENTAID$EENTAID) |> filter(EPPPNUM %in% start_distinct_EPPPNUM$EPPPNUM)
 
-job_data_08 = job_data_08_m1
+# Now we have the intersection of the sets of those who lost a job during the time period and those who got a job during the time period of the interviews.
 
-for (i in 2:64) {
-  
-  var_name = paste("job_data_08", i, sep = "_m")
-  
-  data_stor = get(var_name)
-  
-  job_data_08 = job_data_08 |> full_join(data_stor, by)
-  
-  rm(data_stor)
-  rm(list = var_name)
-}
+rm(end_date_obs)
 
+# Cartesian Product of the two data sets.
+combined_starts_ends = inner_join(end_date_obs_filtered, start_date_obs_filtered, by = c("SSUID", "EENTAID", "EPPPNUM"), relationship = "many-to-many")
+
+# Distance between start date and end date.
+combined_starts_ends = combined_starts_ends |> mutate(date_difference = start_date_job_1_TSJDATE1.y - end_date_job_1_TEJDATE1.x) |> filter(date_difference >= 0)
+
+# Filtering difference
+nearest_date = combined_starts_ends |> group_by(date_difference) |> filter(date_difference == min(date_difference)) |> ungroup()
+
+# Working to keep only observation in the same month as when they lost their old job and got a new one.
+nearest_date = nearest_date |> mutate(end_date_job_1_TEJDATE1.x = as.Date(as.character(end_date_job_1_TEJDATE1.x), format = "%Y%m%d")) |> mutate(end_year = year(as.character(end_date_job_1_TEJDATE1.x))) |> mutate(end_month = month(as.character(end_date_job_1_TEJDATE1.x)))
+
+nearest_date = nearest_date |> mutate(start_date_job_1_TSJDATE1.y = as.Date(as.character(start_date_job_1_TSJDATE1.y), format = "%Y%m%d")) |> mutate(start_year = year(as.character(start_date_job_1_TSJDATE1.y))) |> mutate(start_month = month(as.character(start_date_job_1_TSJDATE1.y)))
+
+nearest_date = nearest_date |> filter(calendar_year_RHCALYR.x == end_year) |> filter(calendar_month_RHCALMN.x == end_month) |> filter(calendar_year_RHCALYR.y == start_year) |> filter(calendar_month_RHCALMN.y == start_month)
+
+nearest_date = nearest_date |> distinct(SSUID, EENTAID, EPPPNUM, end_date_job_1_TEJDATE1.x, .keep_all = T)
+
+# And it is cleaned!!!
+
+# Summary Stats and change percent change in wages.
+
+nearest_date = nearest_date |> filter(job_earnings_TPMSUM1.x != 0) |> filter(job_earnings_TPMSUM1.y  != 0) |> mutate(percent_change_earings = (job_earnings_TPMSUM1.y - job_earnings_TPSUM1.x)/job_earnings_TPMSUM1.x)
+
+summary_stats = mean(nearest_date$percent_change_earings)
