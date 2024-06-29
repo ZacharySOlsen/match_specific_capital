@@ -102,7 +102,7 @@ combined_starts_ends = inner_join(end_date_obs_filtered, start_date_obs_filtered
 combined_starts_ends = combined_starts_ends |> mutate(date_difference = start_date_job_1_TSJDATE1.y - end_date_job_1_TEJDATE1.x) |> filter(date_difference >= 0)
 
 # Filtering difference
-nearest_date = combined_starts_ends |> group_by(date_difference) |> filter(date_difference == min(date_difference)) |> ungroup()
+nearest_date = combined_starts_ends |> group_by(end_date_job_1_TEJDATE1.x, SSUID, EENTAID, EPPPNUM) |> filter(date_difference == min(date_difference)) |> ungroup()
 
 # Working to keep only observation in the same month as when they lost their old job and got a new one.
 nearest_date = nearest_date |> mutate(end_date_job_1_TEJDATE1.x = as.Date(as.character(end_date_job_1_TEJDATE1.x), format = "%Y%m%d")) |> mutate(end_year = year(as.character(end_date_job_1_TEJDATE1.x))) |> mutate(end_month = month(as.character(end_date_job_1_TEJDATE1.x)))
@@ -129,12 +129,13 @@ nearest_date = nearest_date |> mutate(hispanic_EORIGIN.x = if_else(hispanic_EORI
 
 nearest_date = nearest_date |> mutate(highschool = if_else(highest_educ_EEDUCATE.x == 39, 1, 0))
 nearest_date = nearest_date |> mutate(some_college = if_else(highest_educ_EEDUCATE.x == 40, 1, 0))
+nearest_date = nearest_date |> mutate(trade_vocation = if_else(highest_educ_EEDUCATE.x == 41, 1, 0))
 nearest_date = nearest_date |> mutate(associates = if_else(highest_educ_EEDUCATE.x == 43, 1, 0))
 nearest_date = nearest_date |> mutate(no_highschool = if_else(highest_educ_EEDUCATE.x < 39, 1, 0))
 nearest_date = nearest_date |> mutate(bachelors = if_else(highest_educ_EEDUCATE.x == 44, 1, 0))
 nearest_date = nearest_date |> mutate(master_professional = if_else(highest_educ_EEDUCATE.x > 44, 1, 0))
 
-summary_stat_demographics = nearest_date |> select(no_highschool, highschool, some_college, associates, bachelors, master_professional, female, black, asian, other, hispanic_EORIGIN.x, age_TAGE.x)
+summary_stat_demographics = nearest_date |> select(no_highschool, highschool, some_college, trade_vocation, associates, bachelors, master_professional, female, black, asian, other, hispanic_EORIGIN.x, age_TAGE.x)
 
 summary_demographics = summary_stat_demographics |> summarize(across(everything(), mean))
 
@@ -146,11 +147,12 @@ demographic_names = c("No High School Diploma" = "no_highschool",
                       "Masters, PhD, or Professional Degree" = "master_professional",
                       "Female" = "female", "African American" = "black",
                       "Asian" = "asian", "Other Race" = "other",
-                      "Hispanic" = "hispanic_EORIGIN.x", "Age" = "age_TAGE.x")
+                      "Hispanic" = "hispanic_EORIGIN.x", "Age" = "age_TAGE.x",
+                      "Trade, Technical, or Vocational Certification" = "trade_vocation")
 
 summary_demographics = rename(summary_demographics, all_of(demographic_names)) |>
   kbl(caption = "Demographics for 2001 SIPP Sample that Lost and Gained a Job") |>
-  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 439") |>
+  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 387") |>
   save_kable("demographics_01.html")
 
 print(summary_demographics)
@@ -171,7 +173,7 @@ earning_summary_sd = nearest_date |>
 
 earning_summary_stats = inner_join(earning_summary_means, earning_summary_sd, by = "name") |>
   kbl(caption = "Summary Statistics for Earnings of 2001 SIPP Sample that Lost and Gained a Job", col.names = c("", "Mean", "Standard Deviation")) |>
-  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 439") |>
+  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 387") |>
   save_kable("earning_table_01.html")
 
 print(earning_summary_stats)
