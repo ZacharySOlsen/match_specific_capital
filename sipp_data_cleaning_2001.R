@@ -44,9 +44,10 @@ columns = fwf_positions(start = start_position_04, end_position_04,
 data_files = c()
 for (i in 1:9) {
   dat_stor = paste("/Users/zs0ls/Documents/Grad School/Econ 290/SIPP Data Analysis/2001_wave/l01puw", sep = "", i)
-  dat_stor2 = paste(dat_stor, sep = "/", "l01puw")
-  dat_stor_3 = paste(dat_stor2, sep = "", i)
+  dat_stor_2 = paste(dat_stor, sep = "/", "l01puw")
+  dat_stor_3 = paste(dat_stor_2, sep = "", i)
   data_files[i] = paste(dat_stor_3, sep = ".", "dat")
+  rm(dat_stor, dat_stor_2, dat_stor_3)
 }
 
 # For loop to upload all of the data
@@ -64,9 +65,9 @@ for (i in seq(data_files)) {
   job_data_01 = bind_rows(job_data_01, data_stor)
   
   # Clearing variable to save memory.
-  rm(data_stor)
+  rm(data_stor, data_file)
 }
-
+rm(data_files)
 
 # Splitting data into observations with job end dates and job start dates.
 end_date_obs = job_data_01 |> filter(end_date_job_1_TEJDATE1 != -1) |> filter(reason_separation_ERSEND1 %in% c(8, 9))
@@ -115,11 +116,68 @@ nearest_date = nearest_date |> distinct(SSUID, EENTAID, EPPPNUM, end_date_job_1_
 # And it is cleaned!!!
 
 # Summary Stats and change percent change in wages.
-
 nearest_date = nearest_date |> rename(job_earnings_TPMSUM1_old  = job_earnings_TPMSUM1.x) |> rename(job_earnings_TPMSUM1_new = job_earnings_TPMSUM1.y)
 
 nearest_date = nearest_date |> filter(job_earnings_TPMSUM1_old != 0) |> filter(job_earnings_TPMSUM1_new != 0)
 
-nearest_date = nearest_date |> mutate(percent_change_earnings = (job_earnings_TPMSUM1_old - job_earnings_TPMSUM1_new)/job_earnings_TPMSUM1_old)
+nearest_date = nearest_date |> mutate(percent_change_earnings = (job_earnings_TPMSUM1_new - job_earnings_TPMSUM1_old)/job_earnings_TPMSUM1_old) 
+nearest_date = nearest_date |> mutate(sex_ESEX.x = if_else(sex_ESEX.x == 2, 1, 0)) |> rename(female = sex_ESEX.x)
+nearest_date = nearest_date |> mutate(black = if_else(race_ERACE.x == 2, 1, 0))
+nearest_date = nearest_date |> mutate(asian = if_else(race_ERACE.x == 3, 1, 0))
+nearest_date = nearest_date |> mutate(other = if_else(race_ERACE.x == 4, 1, 0))
+nearest_date = nearest_date |> mutate(hispanic_EORIGIN.x = if_else(hispanic_EORIGIN.x == 1, 1, 0))
 
-summary_stats = mean(nearest_date$percent_change_earnings)
+nearest_date = nearest_date |> mutate(highschool = if_else(highest_educ_EEDUCATE.x == 39, 1, 0))
+nearest_date = nearest_date |> mutate(some_college = if_else(highest_educ_EEDUCATE.x == 40, 1, 0))
+nearest_date = nearest_date |> mutate(associates = if_else(highest_educ_EEDUCATE.x == 43, 1, 0))
+nearest_date = nearest_date |> mutate(no_highschool = if_else(highest_educ_EEDUCATE.x < 39, 1, 0))
+nearest_date = nearest_date |> mutate(bachelors = if_else(highest_educ_EEDUCATE.x == 44, 1, 0))
+nearest_date = nearest_date |> mutate(master_professional = if_else(highest_educ_EEDUCATE.x > 44, 1, 0))
+
+summary_stat_demographics = nearest_date |> select(no_highschool, highschool, some_college, associates, bachelors, master_professional, female, black, asian, other, hispanic_EORIGIN.x, age_TAGE.x)
+
+summary_demographics = summary_stat_demographics |> summarize(across(everything(), mean))
+
+demographic_names = c("No High School Diploma" = "no_highschool",
+                      "High School Diploma" = "highschool",
+                      "Some College" = "some_college",
+                      "Associates Degree" = "associates",
+                      "Bachelors Degree" = "bachelors",
+                      "Masters, PhD, or Professional Degree" = "master_professional",
+                      "Female" = "female", "African American" = "black",
+                      "Asian" = "asian", "Other Race" = "other",
+                      "Hispanic" = "hispanic_EORIGIN.x", "Age" = "age_TAGE.x")
+
+summary_demographics = rename(summary_demographics, all_of(demographic_names)) |>
+  kbl(caption = "Demographics for 2001 SIPP Sample that Lost and Gained a Job") |>
+  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 439") |>
+  save_kable("demographics_01.html")
+
+print(summary_demographics)
+
+earning_names = c("Old Job Monthly Earnings" = "job_earnings_TPMSUM1_old",
+                  "New Job Monthly Earnings" = "job_earnings_TPMSUM1_new",
+                  "Percent Change in Monthly Earnings" = "percent_change_earnings")
+
+earning_summary_means = nearest_date |> 
+  select(job_earnings_TPMSUM1_old, job_earnings_TPMSUM1_new, percent_change_earnings) |>
+  summarize(across(everything(), mean)) |> rename(any_of(earning_names)) |>
+  pivot_longer(everything()) |> rename("Mean" = value)
+
+earning_summary_sd = nearest_date |> 
+  select(job_earnings_TPMSUM1_old, job_earnings_TPMSUM1_new, percent_change_earnings) |>
+  summarize(across(everything(), sd)) |> rename(any_of(earning_names)) |>
+  pivot_longer(everything()) |> rename("Standard Deviation" = value)
+
+earning_summary_stats = inner_join(earning_summary_means, earning_summary_sd, by = "name") |>
+  kbl(caption = "Summary Statistics for Earnings of 2001 SIPP Sample that Lost and Gained a Job", col.names = c("", "Mean", "Standard Deviation")) |>
+  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 439") |>
+  save_kable("earning_table_01.html")
+
+print(earning_summary_stats)
+
+pre_ind = nearest_date |> count(ind_code_EJBIND1.x, sort = T) |>  head(10)
+post_ind = nearest_date |> count(ind_code_EJBIND1.y, sort = T) |> head(10)
+
+pre_occup = nearest_date |> count(occup_code_TJBOCC1.x, sort = T) |> head(10)
+post_occup = nearest_date |> count(occup_code_TJBOCC1.y, sort = T) |> head(10)
