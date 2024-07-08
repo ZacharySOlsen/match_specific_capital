@@ -82,6 +82,8 @@ for (i in seq(data_files)) {
 }
 rm(data_files)
 
+# job_data_08 = job_data_08 |> filter(job_earnings_TPMSUM1 < 12500)
+
 # Splitting data into observations with job end dates and job start dates.
 end_date_obs = job_data_08 |> filter(end_date_job_1_TEJDATE1 != -1) |> filter(reason_separation_ERSEND1 %in% c(8, 9))
 start_date_obs = job_data_08 |> filter(start_date_job_1_TSJDATE1 > 20080101)
@@ -109,48 +111,64 @@ end_date_obs_filtered = end_date_obs |> filter(SSUID %in% start_distinct_SSUID$S
 rm(end_date_obs)
 
 # Cartesian Product of the two data sets.
-combined_starts_ends = inner_join(end_date_obs_filtered, start_date_obs_filtered, by = c("SSUID", "EENTAID", "EPPPNUM"), relationship = "many-to-many")
+combined_starts_ends = inner_join(end_date_obs_filtered, start_date_obs_filtered, by = c("SSUID", "EENTAID", "EPPPNUM"), relationship = "many-to-many", suffix = c("_old", "_new"))
 
 # Distance between start date and end date.
-combined_starts_ends = combined_starts_ends |> mutate(date_difference = start_date_job_1_TSJDATE1.y - end_date_job_1_TEJDATE1.x) |> filter(date_difference >= 0)
+combined_starts_ends = combined_starts_ends |> mutate(date_difference = start_date_job_1_TSJDATE1_new - end_date_job_1_TEJDATE1_old) |> filter(date_difference >= 0)
 
 # Filtering difference
-nearest_date = combined_starts_ends |> group_by(SSUID, EPPPNUM, EENTAID, end_date_job_1_TEJDATE1.x) |> filter(date_difference == min(date_difference)) |> ungroup()
+nearest_date = combined_starts_ends |> group_by(SSUID, EPPPNUM, EENTAID, end_date_job_1_TEJDATE1_old) |> filter(date_difference == min(date_difference)) |> ungroup()
 
 # Working to keep only observation in the same month as when they lost their old job and got a new one.
-nearest_date = nearest_date |> mutate(end_date_job_1_TEJDATE1.x = as.Date(as.character(end_date_job_1_TEJDATE1.x), format = "%Y%m%d")) |> mutate(end_year = year(as.character(end_date_job_1_TEJDATE1.x))) |> mutate(end_month = month(as.character(end_date_job_1_TEJDATE1.x)))
+nearest_date = nearest_date |> mutate(end_date_job_1_TEJDATE1_old = as.Date(as.character(end_date_job_1_TEJDATE1_old), format = "%Y%m%d")) |> mutate(end_year = year(as.character(end_date_job_1_TEJDATE1_old))) |> mutate(end_month = month(as.character(end_date_job_1_TEJDATE1_old)))
 
-nearest_date = nearest_date |> mutate(start_date_job_1_TSJDATE1.y = as.Date(as.character(start_date_job_1_TSJDATE1.y), format = "%Y%m%d")) |> mutate(start_year = year(as.character(start_date_job_1_TSJDATE1.y))) |> mutate(start_month = month(as.character(start_date_job_1_TSJDATE1.y)))
+nearest_date = nearest_date |> mutate(start_date_job_1_TSJDATE1_new = as.Date(as.character(start_date_job_1_TSJDATE1_new), format = "%Y%m%d")) |> mutate(start_year = year(as.character(start_date_job_1_TSJDATE1_new))) |> mutate(start_month = month(as.character(start_date_job_1_TSJDATE1_new)))
 
-nearest_date = nearest_date |> filter(calendar_year_RHCALYR.x == end_year) |> filter(calendar_month_RHCALMN.x == end_month) |> filter(calendar_year_RHCALYR.y == start_year) |> filter(calendar_month_RHCALMN.y == start_month)
+nearest_date = nearest_date |> filter(calendar_year_RHCALYR_old == end_year) |> filter(calendar_month_RHCALMN_old == end_month) |> filter(calendar_year_RHCALYR_new == start_year) |> filter(calendar_month_RHCALMN_new == start_month)
 
-nearest_date = nearest_date |> distinct(SSUID, EENTAID, EPPPNUM, end_date_job_1_TEJDATE1.x, .keep_all = T)
+nearest_date = nearest_date |> distinct(SSUID, EENTAID, EPPPNUM, end_date_job_1_TEJDATE1_old, .keep_all = T)
 
 # And it is cleaned!!!
 
+# Adding month before wage
+smaller_job_data = job_data_08 |> select(job_earnings_TPMSUM1, ind_code_EJBIND1, occup_code_TJBOCC1, calendar_month_RHCALMN, calendar_year_RHCALYR, SSUID, EENTAID, EPPPNUM)
+
+nearest_date = nearest_date |> mutate(month_before = calendar_month_RHCALMN_old - 1) |> 
+  mutate(end_year = if_else(month_before == 0, end_year - 1, end_year)) |> 
+  mutate(month_before = if_else(month_before == 0, 12, month_before))
+
+nearest_date = inner_join(nearest_date, smaller_job_data, by = c("SSUID", "EENTAID", "EPPPNUM", "end_year" = "calendar_year_RHCALYR", "month_before" = "calendar_month_RHCALMN", "ind_code_EJBIND1_old" = "ind_code_EJBIND1", "occup_code_TJBOCC1_old" = "occup_code_TJBOCC1"), suffix = c("_exact", "_monthB")) |> rename("earnings_m_b_TPSUM1" = "job_earnings_TPMSUM1")
+
+#Adding month after wage
+nearest_date = nearest_date |> mutate(month_after = calendar_month_RHCALMN_new + 1) |> 
+  mutate(end_year_a = if_else(month_after == 13, start_year + 1, start_year)) |>
+  mutate(month_after = if_else(month_after == 13, 1, month_after))
+
+nearest_date = inner_join(nearest_date, smaller_job_data, by = c("SSUID", "EENTAID", "EPPPNUM", "start_year" = "calendar_year_RHCALYR", "month_after" = "calendar_month_RHCALMN", "ind_code_EJBIND1_new" = "ind_code_EJBIND1", "occup_code_TJBOCC1_new" = "occup_code_TJBOCC1"), suffix = c("_exact", "_monthB")) |> rename("earnings_m_a_TPSUM1" = "job_earnings_TPMSUM1")
+
+
 # Summary Stats and change percent change in wages.
 
-nearest_date = nearest_date |> rename(job_earnings_TPMSUM1_old  = job_earnings_TPMSUM1.x) |> rename(job_earnings_TPMSUM1_new = job_earnings_TPMSUM1.y)
+nearest_date = nearest_date |> filter(earnings_m_b_TPSUM1 != 0) |> 
+  filter(earnings_m_a_TPSUM1 != 0)
 
-nearest_date = nearest_date |> filter(job_earnings_TPMSUM1_old != 0) |> filter(job_earnings_TPMSUM1_new != 0)
+nearest_date = nearest_date |> mutate(percent_change_earnings = (earnings_m_a_TPSUM1 - earnings_m_b_TPSUM1)/earnings_m_b_TPSUM1) 
+nearest_date = nearest_date |> mutate(sex_ESEX_old = if_else(sex_ESEX_old == 2, 1, 0)) |> rename(female = sex_ESEX_old)
+nearest_date = nearest_date |> mutate(black = if_else(race_ERACE_old == 2, 1, 0))
+nearest_date = nearest_date |> mutate(asian = if_else(race_ERACE_old == 3, 1, 0))
+nearest_date = nearest_date |> mutate(other = if_else(race_ERACE_old == 4, 1, 0))
+nearest_date = nearest_date |> mutate(hispanic_EORIGIN_old = if_else(hispanic_EORIGIN_old == 1, 1, 0))
+nearest_date = nearest_date |> mutate(citizen_ECITIZEN_old = if_else(citizen_ECITIZEN_old == 1, 1, 0))
 
-nearest_date = nearest_date |> mutate(percent_change_earnings = (job_earnings_TPMSUM1_new - job_earnings_TPMSUM1_old)/job_earnings_TPMSUM1_old) 
-nearest_date = nearest_date |> mutate(sex_ESEX.x = if_else(sex_ESEX.x == 2, 1, 0)) |> rename(female = sex_ESEX.x)
-nearest_date = nearest_date |> mutate(black = if_else(race_ERACE.x == 2, 1, 0))
-nearest_date = nearest_date |> mutate(asian = if_else(race_ERACE.x == 3, 1, 0))
-nearest_date = nearest_date |> mutate(other = if_else(race_ERACE.x == 4, 1, 0))
-nearest_date = nearest_date |> mutate(hispanic_EORIGIN.x = if_else(hispanic_EORIGIN.x == 1, 1, 0))
-nearest_date = nearest_date |> mutate(citizen_ECITIZEN.x = if_else(citizen_ECITIZEN.x == 1, 1, 0))
+nearest_date = nearest_date |> mutate(highschool = if_else(highest_educ_EEDUCATE_old == 39, 1, 0))
+nearest_date = nearest_date |> mutate(some_college = if_else(highest_educ_EEDUCATE_old == 40, 1, 0))
+nearest_date = nearest_date |> mutate(trade_vocation = if_else(highest_educ_EEDUCATE_old == 41, 1, 0))
+nearest_date = nearest_date |> mutate(associates = if_else(highest_educ_EEDUCATE_old == 43, 1, 0))
+nearest_date = nearest_date |> mutate(no_highschool = if_else(highest_educ_EEDUCATE_old < 39, 1, 0))
+nearest_date = nearest_date |> mutate(bachelors = if_else(highest_educ_EEDUCATE_old == 44, 1, 0))
+nearest_date = nearest_date |> mutate(master_professional = if_else(highest_educ_EEDUCATE_old > 44, 1, 0))
 
-nearest_date = nearest_date |> mutate(highschool = if_else(highest_educ_EEDUCATE.x == 39, 1, 0))
-nearest_date = nearest_date |> mutate(some_college = if_else(highest_educ_EEDUCATE.x == 40, 1, 0))
-nearest_date = nearest_date |> mutate(trade_vocation = if_else(highest_educ_EEDUCATE.x == 41, 1, 0))
-nearest_date = nearest_date |> mutate(associates = if_else(highest_educ_EEDUCATE.x == 43, 1, 0))
-nearest_date = nearest_date |> mutate(no_highschool = if_else(highest_educ_EEDUCATE.x < 39, 1, 0))
-nearest_date = nearest_date |> mutate(bachelors = if_else(highest_educ_EEDUCATE.x == 44, 1, 0))
-nearest_date = nearest_date |> mutate(master_professional = if_else(highest_educ_EEDUCATE.x > 44, 1, 0))
-
-summary_stat_demographics = nearest_date |> select(no_highschool, highschool, some_college, trade_vocation, associates, bachelors, master_professional, female, black, asian, other, hispanic_EORIGIN.x, age_TAGE.x, citizen_ECITIZEN.x)
+summary_stat_demographics = nearest_date |> select(no_highschool, highschool, some_college, trade_vocation, associates, bachelors, master_professional, female, black, asian, other, hispanic_EORIGIN_old, age_TAGE_old, citizen_ECITIZEN_old)
 
 summary_demographics = summary_stat_demographics |> summarize(across(everything(), mean))
 
@@ -162,8 +180,8 @@ demographic_names = c("No High School Diploma" = "no_highschool",
                       "Masters, PhD, or Professional Degree" = "master_professional",
                       "Female" = "female", "African American" = "black",
                       "Asian" = "asian", "Other Race" = "other",
-                      "Hispanic" = "hispanic_EORIGIN.x", "Age" = "age_TAGE.x",
-                      "Is a Citizen of the US" = "citizen_ECITIZEN.x",
+                      "Hispanic" = "hispanic_EORIGIN_old", "Age" = "age_TAGE_old",
+                      "Is a Citizen of the US" = "citizen_ECITIZEN_old",
                       "Trade, Technical, or Vocational Certification" = "trade_vocation")
 
 summary_demographics = rename(summary_demographics, all_of(demographic_names)) |>
@@ -173,29 +191,30 @@ summary_demographics = rename(summary_demographics, all_of(demographic_names)) |
 
 print(summary_demographics)
 
-earning_names = c("Old Job Monthly Earnings" = "job_earnings_TPMSUM1_old",
-                  "New Job Monthly Earnings" = "job_earnings_TPMSUM1_new",
+earning_names = c("Old Job Monthly Earnings" = "earnings_m_b_TPSUM1",
+                  "New Job Monthly Earnings" = "earnings_m_a_TPSUM1",
                   "Percent Change in Monthly Earnings" = "percent_change_earnings")
 
 earning_summary_means = nearest_date |> 
-  select(job_earnings_TPMSUM1_old, job_earnings_TPMSUM1_new, percent_change_earnings) |>
+  select(earnings_m_b_TPSUM1, earnings_m_a_TPSUM1, percent_change_earnings) |>
   summarize(across(everything(), mean)) |> rename(any_of(earning_names)) |>
   pivot_longer(everything()) |> rename("Mean" = value)
 
 earning_summary_sd = nearest_date |> 
-  select(job_earnings_TPMSUM1_old, job_earnings_TPMSUM1_new, percent_change_earnings) |>
+  select(earnings_m_b_TPSUM1, earnings_m_a_TPSUM1, percent_change_earnings) |>
   summarize(across(everything(), sd)) |> rename(any_of(earning_names)) |>
   pivot_longer(everything()) |> rename("Standard Deviation" = value)
 
 earning_summary_stats = inner_join(earning_summary_means, earning_summary_sd, by = "name") |>
   kbl(caption = "Summary Statistics for Earnings of 2008 SIPP Sample that Lost and Gained a Job", col.names = c("", "Mean", "Standard Deviation")) |>
-  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 808") |>
-  save_kable("earning_table_08.html")
+  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 808")
+
+save_kable(earning_summary_stats,"earning_table_08.html")
 
 print(earning_summary_stats)
 
-pre_ind = nearest_date |> count(ind_code_EJBIND1.x, sort = T) |>  head(10)
-post_ind = nearest_date |> count(ind_code_EJBIND1.y, sort = T) |> head(10)
+pre_ind = nearest_date |> count(ind_code_EJBIND1_old, sort = T) |>  head(10)
+post_ind = nearest_date |> count(ind_code_EJBIND1_new, sort = T) |> head(10)
 
-pre_occup = nearest_date |> count(occup_code_TJBOCC1.x, sort = T) |> head(10)
-post_occup = nearest_date |> count(occup_code_TJBOCC1.y, sort = T) |> head(10)
+pre_occup = nearest_date |> count(occup_code_TJBOCC1_old, sort = T) |> head(10)
+post_occup = nearest_date |> count(occup_code_TJBOCC1_new, sort = T) |> head(10)
