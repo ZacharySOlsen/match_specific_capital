@@ -9,35 +9,36 @@ library(data.table)
 library(readr)
 library(tidyverse)
 
+
 # Defining Columns we want to import from SIPP
 
-# Column start positions for 2008 variables.
-start_position_04 = c(887, 963, 878, 954, 911, 987, 896, 972, 925, 1001, 849, 941,
-                      1017, 945, 1021, 780, 1486, 1492, 845, 794, 839, 829, 575,
-                      531, 533, 535, 644, 2188, 26, 28, 6, 513, 516)
-
-# Column end positions for 2008 variables.
-end_position_04 = c(894, 970, 885, 961, 914, 990, 897, 973, 929, 1005, 850, 943,
-                    1019, 947, 1023, 781, 1490, 1496, 846, 795, 843, 830, 576, 531,
-                    533, 536, 651, 2189, 27, 31, 17, 515, 519)
-
 # Variable Names
-column_names = c("end_date_job_1_TEJDATE1", "end_date_job_2_TEJDATE2",
-                 "start_date_job_1_TSJDATE1", "start_date_job_2_TSJDATE2",
-                 "job_duration_1_EOCCTIM1", "job_duration_2_EOCCTIM2",
-                 "reason_separation_ERSEND1", "reason_separation_ERSEND2",
-                 "job_earnings_TPMSUM1", "job_earnings_TPMSUM2",
-                 "employment_status_RMESR", "ind_code_EJBIND1", "ind_code_EJBIND2",
-                 "occup_code_TJBOCC1", "occup_code_TJBOCC2", "highest_educ_EEDUCATE",
-                 "amount_state_unemp_T05AMT", "amount_other_unemp_T07AMT",
-                 "unknown_job_date_EBFLAG", "labor_force_imputation_EPPFLAG",
-                 "income_from_extra_job_TMLMSUM", "time_layoff_ELAYOFF", "age_TAGE",
-                 "sex_ESEX", "race_ERACE", "hispanic_EORIGIN", 
-                 "total_person_income_TPTOTINC",
-                 "longitudinal_month_LGTMON", "calendar_month_RHCALMN",
-                 "calendar_year_RHCALYR", "SSUID", "EENTAID", "EPPPNUM")
+column_names = c("SSUID", "EENTAID", "EPPPNUM", "RHCALYR", "RHCALMN", "LGTMON",
+                 "EENO1", "EENO2", "RWKESR1", "RWKESR2", "RWKESR3", "RWKESR4", 
+                 "RWKESR5", "ELAYOFF", "TEJDATE1", "TEJDATE2", "TSJDATE1", "TSJDATE2", 
+                 "ERSEND1", "ERSEND2", "EOCCTIM1", "EOCCTIM2", "EJBIND1", "EJBIND2",
+                 "TJBOCC1", "TJBOCC2", "TPMSUM1", "TPMSUM2", "TMLMSUM", "T05AMT",
+                 "TPTOTINC", "EBFLAG", "EPPFLAG", "EEDUCATE", "ESEX", "ERACE", 
+                 "EORIGIN", "TAGE")
 
-columns = fwf_positions(start = start_position_04, end_position_04, 
+
+start_position = c(6, 513, 516, 28, 26, 2188, 
+                   873, 949, 851, 853, 855, 857, 
+                   859, 829, 887, 963, 878, 954, 
+                   896, 972, 911, 987, 941, 1017, 
+                   945, 1021, 925, 1001, 839, 1486, 
+                   644, 845, 794, 780, 531, 533, 
+                   535, 575)
+
+end_position = c(17, 515, 519, 31, 27, 2189, 
+                 874, 950, 852, 854, 856, 858, 
+                 860, 830, 894, 970, 885, 961, 
+                 897, 973, 914, 990, 943, 1019, 
+                 947, 1023, 929, 1005, 843, 1490, 
+                 651, 846, 795, 781, 531, 533, 
+                 536, 576)
+
+columns = fwf_positions(start = start_position, end_position, 
                         col_names = column_names)
 
 # Loading file path names
@@ -51,7 +52,7 @@ for (i in 1:9) {
 }
 
 # For loop to upload all of the data
-job_data_01 = tibble()
+job_data = tibble()
 
 for (i in seq(data_files)) {
   
@@ -60,145 +61,292 @@ for (i in seq(data_files)) {
   
   data_stor = read_fwf(data_file, col_positions = columns)
   
-  data_stor = as.tibble(sapply(data_stor, as.numeric))
+  data_stor = as_tibble(sapply(data_stor, as.numeric))
   
-  job_data_01 = bind_rows(job_data_01, data_stor)
+  job_data = bind_rows(job_data, data_stor)
   
   # Clearing variable to save memory.
   rm(data_stor, data_file)
 }
-rm(data_files)
+rm(data_files, columns, column_names, end_position, start_position)
 
-# job_data_08 = job_data_08 |> filter(job_earnings_TPMSUM1 < 12500)
+# Filtering for observations that have some kind of unemployment.
+unemployed = job_data |> filter( (RWKESR1 == 4) | (RWKESR2 == 4) | (RWKESR3 == 4) | (RWKESR4 == 4) | (RWKESR5 == 4) ) |>
+  filter( (ERSEND1 == 9) | (ERSEND2 == 9))
 
-# Splitting data into observations with job end dates and job start dates.
-end_date_obs = job_data_01 |> filter(end_date_job_1_TEJDATE1 != -1) |> filter(reason_separation_ERSEND1 %in% c(8, 9))
-start_date_obs = job_data_01 |> filter(start_date_job_1_TSJDATE1 > 20001001)
+# Taking out those laid off to deal with later.
+unemployed_layoff = unemployed |> filter(ELAYOFF == 1)
 
-# Lists of unique person identifiers for those who have a end job date that was do to some undesired separation.
-end_distinct_SSUID = end_date_obs |> distinct(SSUID)
-end_distinct_EENTAID = end_date_obs |> distinct(EENTAID)
-end_distinct_EPPPNUM = end_date_obs |> distinct(EPPPNUM)
+unemployed = unemployed |> filter(ELAYOFF == 2)
 
-# Filtering out starts that don't match unique person identifiers in the end job group.
-start_date_obs_filtered = start_date_obs |> filter(SSUID %in% end_distinct_SSUID$SSUID) |> filter(EENTAID %in% end_distinct_EENTAID$EENTAID) |> filter(EPPPNUM %in% end_distinct_EPPPNUM$EPPPNUM)
+# Dealing with various potential two job variations.
 
-rm(start_date_obs)
-# Lists of unique person identifiers for those who started a job after 01/01/2008.
+# These are those who lost a job and acquired a new one sometime during the same wave.
+no_first_job_end_date = unemployed |> filter(TEJDATE1 == -1) |> filter(TSJDATE1 > TEJDATE2)
 
-start_distinct_SSUID = start_date_obs_filtered |> distinct(SSUID)
-start_distinct_EENTAID = start_date_obs_filtered |> distinct(EENTAID)
-start_distinct_EPPPNUM = start_date_obs_filtered |> distinct(EPPPNUM)
+# Only had one job. Didn't get a new one during that wave.
+no_second_job = unemployed |> filter(EENO2 == -1)
 
-# Filtering out observations in the end job group that don't have unique person identifiers for those in the filtered start group.
-end_date_obs_filtered = end_date_obs |> filter(SSUID %in% start_distinct_SSUID$SSUID) |> filter(EENTAID %in% start_distinct_EENTAID$EENTAID) |> filter(EPPPNUM %in% start_distinct_EPPPNUM$EPPPNUM)
+# Who's left. For visualization purposes.
+leftovers = unemployed |> filter(TEJDATE1 != -1) |> filter(EENO2 != -1)
 
-# Now we have the intersection of the sets of those who lost a job during the time period and those who got a job during the time period of the interviews.
+# Those who did lose a second job.
+lose_second_job = leftovers |> filter(TEJDATE2 != -1)
 
-rm(end_date_obs)
+lose_second_job1 = lose_second_job |> filter(TEJDATE1 > TEJDATE2)
 
-# Cartesian Product of the two data sets.
-combined_starts_ends = inner_join(end_date_obs_filtered, start_date_obs_filtered, by = c("SSUID", "EENTAID", "EPPPNUM"), relationship = "many-to-many", suffix = c("_old", "_new"))
+lose_second_job2 = lose_second_job |> filter(TEJDATE2 > TEJDATE1)
 
-# Distance between start date and end date.
-combined_starts_ends = combined_starts_ends |> mutate(date_difference = start_date_job_1_TSJDATE1_new - end_date_job_1_TEJDATE1_old) |> filter(date_difference >= 0)
+# Narrowing down why they lost their job for the last job they held.
+lose_second_job1 = lose_second_job1 |> filter(ERSEND1 == 9)
 
-# Filtering difference
-nearest_date = combined_starts_ends |> group_by(end_date_job_1_TEJDATE1_old, SSUID, EENTAID, EPPPNUM) |> filter(date_difference == min(date_difference)) |> ungroup()
+lose_second_job2 = lose_second_job2 |> filter(ERSEND2 == 9)
 
-# Working to keep only observation in the same month as when they lost their old job and got a new one.
-nearest_date = nearest_date |> mutate(end_date_job_1_TEJDATE1_old = as.Date(as.character(end_date_job_1_TEJDATE1_old), format = "%Y%m%d")) |> mutate(end_year = year(as.character(end_date_job_1_TEJDATE1_old))) |> mutate(end_month = month(as.character(end_date_job_1_TEJDATE1_old)))
+# Those who didn't lose a second job.
+no_second_job_end_date = leftovers |> filter(TEJDATE2 == -1) |> filter(TSJDATE2 > TEJDATE1)
 
-nearest_date = nearest_date |> mutate(start_date_job_1_TSJDATE1_new = as.Date(as.character(start_date_job_1_TSJDATE1_new), format = "%Y%m%d")) |> mutate(start_year = year(as.character(start_date_job_1_TSJDATE1_new))) |> mutate(start_month = month(as.character(start_date_job_1_TSJDATE1_new)))
+# Okay. Need to work with lose_second_job1, no_first_job_end_date, no_second_job, 
+# and no_second_job_end_date.
 
-nearest_date = nearest_date |> filter(calendar_year_RHCALYR_old == end_year) |> filter(calendar_month_RHCALMN_old == end_month) |> filter(calendar_year_RHCALYR_new == start_year) |> filter(calendar_month_RHCALMN_new == start_month)
+# Finding before/after wages for no_first_job_end_date.
+no_first_job_end_date = no_first_job_end_date |> mutate(TEJDATE2 = ymd(TEJDATE2)) |>
+  mutate(TSJDATE1 = ymd(TSJDATE1)) |> mutate(TSJDATE2 = ymd(TSJDATE2))
 
-nearest_date = nearest_date |> distinct(SSUID, EENTAID, EPPPNUM, end_date_job_1_TEJDATE1_old, .keep_all = T)
+# Wow! They have a nonexistent date. June 31st is truly a day that exists. \s
+# I'll just change that June 30th.
+no_first_job_end_date = no_first_job_end_date |> mutate(TSJDATE2 = if_else(is.na(TSJDATE2), ymd(20080630), TSJDATE2))
 
-# And it is cleaned!!!
+# Creating variables for the month and year they left their old job and started
+# their new one. Can use this to join and get month before and month after income.
+no_first_job_end_date = no_first_job_end_date |> mutate(year_left = year(TEJDATE2)) |>
+  mutate(month_left = month(TEJDATE2)) |> mutate(year_start = year(TSJDATE1)) |>
+  mutate(month_start = month(TSJDATE1)) |> mutate(smallest_diff = as.numeric(TSJDATE1 - TEJDATE2))
 
-# Adding month before wage
-smaller_job_data = job_data_01 |> select(job_earnings_TPMSUM1, ind_code_EJBIND1, occup_code_TJBOCC1, calendar_month_RHCALMN, calendar_year_RHCALYR, SSUID, EENTAID, EPPPNUM)
+nfjed_key = no_first_job_end_date |> 
+  distinct(SSUID, EENTAID, EPPPNUM, year_left, month_left , year_start, month_start, smallest_diff)
 
-nearest_date = nearest_date |> mutate(month_before = calendar_month_RHCALMN_old - 1) |> 
-  mutate(end_year = if_else(month_before == 0, end_year - 1, end_year)) |> 
+nfjed_key = nfjed_key |> mutate(month_before = month_left - 1) |> 
+  mutate(year_before = if_else(month_before == 0, year_left - 1, year_left)) |>
   mutate(month_before = if_else(month_before == 0, 12, month_before))
 
-nearest_date = inner_join(nearest_date, smaller_job_data, by = c("SSUID", "EENTAID", "EPPPNUM", "end_year" = "calendar_year_RHCALYR", "month_before" = "calendar_month_RHCALMN", "ind_code_EJBIND1_old" = "ind_code_EJBIND1", "occup_code_TJBOCC1_old" = "occup_code_TJBOCC1"), suffix = c("_exact", "_monthB")) |> rename("earnings_m_b_TPSUM1" = "job_earnings_TPMSUM1")
-
-#Adding month after wage
-nearest_date = nearest_date |> mutate(month_after = calendar_month_RHCALMN_new + 1) |> 
-  mutate(end_year_a = if_else(month_after == 13, start_year + 1, start_year)) |>
+nfjed_key = nfjed_key |> mutate(month_after = month_start + 1) |>
+  mutate(year_after = if_else(month_after == 13, year_start + 1, year_start)) |>
   mutate(month_after = if_else(month_after == 13, 1, month_after))
 
-nearest_date = inner_join(nearest_date, smaller_job_data, by = c("SSUID", "EENTAID", "EPPPNUM", "start_year" = "calendar_year_RHCALYR", "month_after" = "calendar_month_RHCALMN", "ind_code_EJBIND1_new" = "ind_code_EJBIND1", "occup_code_TJBOCC1_new" = "occup_code_TJBOCC1"), suffix = c("_exact", "_monthB")) |> rename("earnings_m_a_TPSUM1" = "job_earnings_TPMSUM1")
 
+nfjed_data = inner_join(nfjed_key, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_before" = "RHCALMN", "year_before" = "RHCALYR"))
+nfjed_data = inner_join(nfjed_data, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_after" = "RHCALMN", "year_after" = "RHCALYR"), suffix = c("_old", "new"))
 
-# Summary Stats and change percent change in wages.
-nearest_date = nearest_date |> filter(earnings_m_b_TPSUM1 != 0) |> filter(earnings_m_a_TPSUM1 != 0)
+rm(no_first_job_end_date, nfjed_key)
 
-nearest_date = nearest_date |> mutate(percent_change_earnings = (earnings_m_a_TPSUM1 - earnings_m_b_TPSUM1)/earnings_m_b_TPSUM1) 
-nearest_date = nearest_date |> mutate(sex_ESEX_old = if_else(sex_ESEX_old == 2, 1, 0)) |> rename(female = sex_ESEX_old)
-nearest_date = nearest_date |> mutate(black = if_else(race_ERACE_old == 2, 1, 0))
-nearest_date = nearest_date |> mutate(asian = if_else(race_ERACE_old == 3, 1, 0))
-nearest_date = nearest_date |> mutate(other = if_else(race_ERACE_old == 4, 1, 0))
-nearest_date = nearest_date |> mutate(hispanic_EORIGIN_old = if_else(hispanic_EORIGIN_old == 1, 1, 0))
+# Finding before/after wages for no_second_job_end_date.
+no_second_job_end_date = no_second_job_end_date |> mutate(TEJDATE1 = ymd(TEJDATE1)) |>
+  mutate(TSJDATE1 = ymd(TSJDATE1)) |> mutate(TSJDATE2 = ymd(TSJDATE2))
 
-nearest_date = nearest_date |> mutate(highschool = if_else(highest_educ_EEDUCATE_old == 39, 1, 0))
-nearest_date = nearest_date |> mutate(some_college = if_else(highest_educ_EEDUCATE_old == 40, 1, 0))
-nearest_date = nearest_date |> mutate(trade_vocation = if_else(highest_educ_EEDUCATE_old == 41, 1, 0))
-nearest_date = nearest_date |> mutate(associates = if_else(highest_educ_EEDUCATE_old == 43, 1, 0))
-nearest_date = nearest_date |> mutate(no_highschool = if_else(highest_educ_EEDUCATE_old < 39, 1, 0))
-nearest_date = nearest_date |> mutate(bachelors = if_else(highest_educ_EEDUCATE_old == 44, 1, 0))
-nearest_date = nearest_date |> mutate(master_professional = if_else(highest_educ_EEDUCATE_old > 44, 1, 0))
+# Creating variables for the month and year they left their old job and started
+# their new one. Can use this to join and get month before and month after income.
+no_second_job_end_date = no_second_job_end_date |> mutate(year_left = year(TEJDATE1)) |>
+  mutate(month_left = month(TEJDATE1)) |> mutate(year_start = year(TSJDATE2)) |>
+  mutate(month_start = month(TSJDATE2)) |> mutate(smallest_diff = as.numeric(TSJDATE2 - TEJDATE1))
 
-summary_stat_demographics = nearest_date |> select(no_highschool, highschool, some_college, trade_vocation, associates, bachelors, master_professional, female, black, asian, other, hispanic_EORIGIN_old, age_TAGE_old)
+# Creating key.
+nsjed_key = no_second_job_end_date |> 
+  distinct(SSUID, EENTAID, EPPPNUM, year_left, month_left , year_start, month_start, smallest_diff)
 
-summary_demographics = summary_stat_demographics |> summarize(across(everything(), mean))
+nsjed_key = nsjed_key |> mutate(month_before = month_left - 1) |> 
+  mutate(year_before = if_else(month_before == 0, year_left - 1, year_left)) |>
+  mutate(month_before = if_else(month_before == 0, 12, month_before))
 
-demographic_names = c("No High School Diploma" = "no_highschool",
-                      "High School Diploma" = "highschool",
-                      "Some College" = "some_college",
-                      "Associates Degree" = "associates",
-                      "Bachelors Degree" = "bachelors",
-                      "Masters, PhD, or Professional Degree" = "master_professional",
-                      "Female" = "female", "African American" = "black",
-                      "Asian" = "asian", "Other Race" = "other",
-                      "Hispanic" = "hispanic_EORIGIN_old", "Age" = "age_TAGE_old",
-                      "Trade, Technical, or Vocational Certification" = "trade_vocation")
+nsjed_key = nsjed_key |> mutate(month_after = month_start + 1) |>
+  mutate(year_after = if_else(month_after == 13, year_start + 1, year_start)) |>
+  mutate(month_after = if_else(month_after == 13, 1, month_after))
 
-summary_demographics = rename(summary_demographics, all_of(demographic_names)) |>
-  kbl(caption = "Demographics for 2001 SIPP Sample that Lost and Gained a Job") |>
-  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 401")
+nsjed_data = inner_join(nsjed_key, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_before" = "RHCALMN", "year_before" = "RHCALYR"))
+nsjed_data = inner_join(nsjed_data, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_after" = "RHCALMN", "year_after" = "RHCALYR"), suffix = c("_old", "new"))
 
-save_kable(summary_demographics, "demographics_01.html")
+rm(no_second_job_end_date, nsjed_key)
 
-print(summary_demographics)
+# Now working on no_second_job. First I have to actually find when they get their
+# new job.
+find_start_key = no_second_job |> distinct(SSUID, EENTAID, EPPPNUM, TEJDATE1)
 
-earning_names = c("Old Job Monthly Earnings" = "earnings_m_b_TPSUM1",
-                  "New Job Monthly Earnings" = "earnings_m_a_TPSUM1",
-                  "Percent Change in Monthly Earnings" = "percent_change_earnings")
+# Only observations with a start.
+starts = job_data |> filter( (TEJDATE1 != -1) | (TEJDATE2 != -1) )
 
-earning_summary_means = nearest_date |> 
-  select(earnings_m_b_TPSUM1, earnings_m_a_TPSUM1, percent_change_earnings) |>
-  summarize(across(everything(), mean)) |> rename(any_of(earning_names)) |>
-  pivot_longer(everything()) |> rename("Mean" = value)
+# Joining
+find_starts = inner_join(find_start_key, starts, by = c("SSUID", "EENTAID", "EPPPNUM"), relationship = "many-to-many", suffix = c("", "_y"))
 
-earning_summary_sd = nearest_date |> 
-  select(earnings_m_b_TPSUM1, earnings_m_a_TPSUM1, percent_change_earnings) |>
-  summarize(across(everything(), sd)) |> rename(any_of(earning_names)) |>
-  pivot_longer(everything()) |> rename("Standard Deviation" = value)
+# Changing Variables to a date format.
+find_starts = find_starts |> mutate(TSJDATE1 = ymd(TSJDATE1)) |> 
+  mutate(TSJDATE2 = ymd(TSJDATE2)) |> mutate(TEJDATE1 = ymd(TEJDATE1))
 
-earning_summary_stats = inner_join(earning_summary_means, earning_summary_sd, by = "name") |>
-  kbl(caption = "Summary Statistics for Earnings of 2001 SIPP Sample that Lost and Gained a Job", col.names = c("", "Mean", "Standard Deviation")) |>
-  kable_classic_2(html_font = "Times New Roman") |> footnote(general = "n = 401")
+# Getting duration between end and start dates for observations.
+find_starts = find_starts |> mutate(date_diff1 = TSJDATE1 - TEJDATE1) |>
+  mutate(date_diff2 = TSJDATE2 - TEJDATE1)
 
-save_kable(earning_summary_stats, "earning_table_01.html")
+# Filtering out observations where the start dates are before the end date.
+find_starts = find_starts |> filter( (date_diff1 >= 0) | (date_diff2 >= 0))
 
-print(earning_summary_stats)
+# Finding the lowest date diff observations.
+find_starts = find_starts |> mutate(smallest_diff = ifelse( (date_diff2 > date_diff1) & (date_diff1 > 0), date_diff1, date_diff2))
 
-pre_ind = nearest_date |> count(ind_code_EJBIND1_old, sort = T) |>  head(10)
-post_ind = nearest_date |> count(ind_code_EJBIND1_new, sort = T) |> head(10)
+# Records NAs as smaller than any date. NAs only happen for the second job date.
+# So just impute the first date difference.
+find_starts = find_starts |> mutate(smallest_diff = if_else(is.na(smallest_diff), as.numeric(date_diff1), as.numeric(smallest_diff)))
 
-pre_occup = nearest_date |> count(occup_code_TJBOCC1_old, sort = T) |> head(10)
-post_occup = nearest_date |> count(occup_code_TJBOCC1_new, sort = T) |> head(10)
+find_starts = find_starts |> group_by(SSUID, EENTAID, EPPPNUM, TEJDATE1) |> 
+  filter(smallest_diff == min(smallest_diff)) |> ungroup()
+
+find_starts = find_starts |> distinct(SSUID, EENTAID, EPPPNUM, TEJDATE1, .keep_all = T)
+
+find_starts = find_starts |> mutate(date_diff1 = as.numeric(date_diff1)) |> 
+  mutate(date_diff2 = as.numeric(date_diff2))
+
+find_starts = find_starts |> mutate(year_start = if_else(smallest_diff == date_diff1, year(TSJDATE1), year(TSJDATE2))) |>
+  mutate(month_start = if_else(smallest_diff == date_diff1, month(TSJDATE1), month(TSJDATE2)))
+
+find_starts = find_starts |> mutate(year_left = year(TEJDATE1)) |> 
+  mutate(month_left = month(TEJDATE1))
+
+# Adding dates before and dates after.
+find_starts = find_starts |> mutate(month_before = month_left - 1) |> 
+  mutate(year_before = if_else(month_before == 0, year_left - 1, year_left)) |>
+  mutate(month_before = if_else(month_before == 0, 12, month_before))
+
+find_starts = find_starts |> mutate(month_after = month_start + 1) |>
+  mutate(year_after = if_else(month_after == 13, year_start + 1, year_start)) |>
+  mutate(month_after = if_else(month_after == 13, 1, month_after))
+
+# Keeping only the needed things for joining.
+keeps = c("SSUID", "EENTAID", "EPPPNUM", "smallest_diff", "year_start", "month_start",
+          "year_left", "month_left", "month_before", "year_before", "month_after", "year_after")
+
+nsj_key = find_starts |> select(all_of(keeps))
+
+nsj_data = inner_join(nsj_key, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_before" = "RHCALMN", "year_before" = "RHCALYR"))
+nsj_data = inner_join(nsj_data, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_after" = "RHCALMN", "year_after" = "RHCALYR"), suffix = c("_old", "new"))
+
+# Final group. lose_second_job1.
+
+find_start_key2 = lose_second_job1 |> distinct(SSUID, EENTAID, EPPPNUM, TEJDATE1)
+
+# Only observations with a start.
+starts = job_data |> filter( (TEJDATE1 != -1) | (TEJDATE2 != -1) )
+
+# Joining
+find_starts2 = inner_join(find_start_key2, starts, by = c("SSUID", "EENTAID", "EPPPNUM"), relationship = "many-to-many", suffix = c("", "_y"))
+
+# Changing Variables to a date format.
+find_starts2 = find_starts2 |> mutate(TSJDATE1 = ymd(TSJDATE1)) |> 
+  mutate(TSJDATE2 = ymd(TSJDATE2)) |> mutate(TEJDATE1 = ymd(TEJDATE1))
+
+# Getting duration between end and start dates for observations.
+find_starts2 = find_starts2 |> mutate(date_diff1 = TSJDATE1 - TEJDATE1) |>
+  mutate(date_diff2 = TSJDATE2 - TEJDATE1)
+
+# Filtering out observations where the start dates are before the end date.
+find_starts2 = find_starts2 |> filter( (date_diff1 >= 0) | (date_diff2 >= 0))
+
+# Finding the lowest date diff observations.
+find_starts2 = find_starts2 |> mutate(smallest_diff = ifelse( (date_diff2 > date_diff1) & (date_diff1 > 0), date_diff1, date_diff2))
+
+# Records NAs as smaller than any date. NAs only happen for the second job date.
+# So just impute the first date difference.
+find_starts2 = find_starts2 |> mutate(smallest_diff = if_else(is.na(smallest_diff), as.numeric(date_diff1), as.numeric(smallest_diff)))
+
+find_starts2 = find_starts2 |> group_by(SSUID, EENTAID, EPPPNUM, TEJDATE1) |> 
+  filter(smallest_diff == min(smallest_diff)) |> ungroup()
+
+find_starts2 = find_starts2 |> distinct(SSUID, EENTAID, EPPPNUM, TEJDATE1, .keep_all = T)
+
+find_starts2 = find_starts2 |> mutate(date_diff1 = as.numeric(date_diff1)) |> 
+  mutate(date_diff2 = as.numeric(date_diff2))
+
+find_starts2 = find_starts2 |> mutate(year_start = if_else(smallest_diff == date_diff1, year(TSJDATE1), year(TSJDATE2))) |>
+  mutate(month_start = if_else(smallest_diff == date_diff1, month(TSJDATE1), month(TSJDATE2)))
+
+find_starts2 = find_starts2 |> mutate(year_left = year(TEJDATE1)) |> 
+  mutate(month_left = month(TEJDATE1))
+
+# Adding dates before and dates after.
+find_starts2 = find_starts2 |> mutate(month_before = month_left - 1) |> 
+  mutate(year_before = if_else(month_before == 0, year_left - 1, year_left)) |>
+  mutate(month_before = if_else(month_before == 0, 12, month_before))
+
+find_starts2 = find_starts2 |> mutate(month_after = month_start + 1) |>
+  mutate(year_after = if_else(month_after == 13, year_start + 1, year_start)) |>
+  mutate(month_after = if_else(month_after == 13, 1, month_after))
+
+# Keeping only the needed things for joining.
+keeps = c("SSUID", "EENTAID", "EPPPNUM", "smallest_diff", "year_start", "month_start",
+          "year_left", "month_left", "month_before", "year_before", "month_after", "year_after")
+
+lsj1_key = find_starts2 |> select(all_of(keeps))
+
+lsj1_data = inner_join(lsj1_key, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_before" = "RHCALMN", "year_before" = "RHCALYR"))
+lsj1_data = inner_join(lsj1_data, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_after" = "RHCALMN", "year_after" = "RHCALYR"), suffix = c("_old", "new"))
+
+# lose_second_job2
+find_start_key3 = lose_second_job2 |> distinct(SSUID, EENTAID, EPPPNUM, TEJDATE2)
+
+# Only observations with a start.
+starts = job_data |> filter( (TEJDATE1 != -1) | (TEJDATE2 != -1) )
+
+# Joining
+find_starts3 = inner_join(find_start_key3, starts, by = c("SSUID", "EENTAID", "EPPPNUM"), relationship = "many-to-many", suffix = c("", "_y"))
+
+# Changing Variables to a date format.
+find_starts3 = find_starts3 |> mutate(TSJDATE1 = ymd(TSJDATE1)) |> 
+  mutate(TSJDATE2 = ymd(TSJDATE2)) |> mutate(TEJDATE2 = ymd(TEJDATE2))
+
+# Getting duration between end and start dates for observations.
+find_starts3 = find_starts3 |> mutate(date_diff1 = TSJDATE1 - TEJDATE2) |>
+  mutate(date_diff2 = TSJDATE2 - TEJDATE2)
+
+# Filtering out observations where the start dates are before the end date.
+find_starts3 = find_starts3 |> filter( (date_diff1 >= 0) | (date_diff2 >= 0))
+
+# Finding the lowest date diff observations.
+find_starts3 = find_starts3 |> mutate(smallest_diff = ifelse( (date_diff2 > date_diff1) & (date_diff1 > 0), date_diff1, date_diff2))
+
+# Records NAs as smaller than any date. NAs only happen for the second job date.
+# So just impute the first date difference.
+find_starts3 = find_starts3 |> mutate(smallest_diff = if_else(is.na(smallest_diff), as.numeric(date_diff1), as.numeric(smallest_diff)))
+
+find_starts3 = find_starts3 |> group_by(SSUID, EENTAID, EPPPNUM, TEJDATE2) |> 
+  filter(smallest_diff == min(smallest_diff)) |> ungroup()
+
+find_starts3 = find_starts3 |> distinct(SSUID, EENTAID, EPPPNUM, TEJDATE2, .keep_all = T)
+
+find_starts3 = find_starts3 |> mutate(date_diff1 = as.numeric(date_diff1)) |> 
+  mutate(date_diff2 = as.numeric(date_diff2))
+
+find_starts3 = find_starts3 |> mutate(year_start = if_else(smallest_diff == date_diff1, year(TSJDATE1), year(TSJDATE2))) |>
+  mutate(month_start = if_else(smallest_diff == date_diff1, month(TSJDATE1), month(TSJDATE2)))
+
+find_starts3 = find_starts3 |> mutate(year_left = year(TEJDATE2)) |> 
+  mutate(month_left = month(TEJDATE2))
+
+# Adding dates before and dates after.
+find_starts3 = find_starts3 |> mutate(month_before = month_left - 1) |> 
+  mutate(year_before = if_else(month_before == 0, year_left - 1, year_left)) |>
+  mutate(month_before = if_else(month_before == 0, 12, month_before))
+
+find_starts3 = find_starts3 |> mutate(month_after = month_start + 1) |>
+  mutate(year_after = if_else(month_after == 13, year_start + 1, year_start)) |>
+  mutate(month_after = if_else(month_after == 13, 1, month_after))
+
+# Keeping only the needed things for joining.
+keeps = c("SSUID", "EENTAID", "EPPPNUM", "smallest_diff", "year_start", "month_start",
+          "year_left", "month_left", "month_before", "year_before", "month_after", "year_after")
+
+lsj2_key = find_starts3 |> select(all_of(keeps))
+
+lsj2_data = inner_join(lsj2_key, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_before" = "RHCALMN", "year_before" = "RHCALYR"))
+lsj2_data = inner_join(lsj2_data, job_data, by = c("SSUID", "EPPPNUM", "EENTAID", "month_after" = "RHCALMN", "year_after" = "RHCALYR"), suffix = c("_old", "new"))
+
+# Done sorting. Now will bind these together.
+cleaned_01 = nsj_data |> bind_rows(nsjed_data) |> bind_rows(nfjed_data) |> 
+  bind_rows(lsj1_data) |> bind_rows(lsj2_data)
+
+write_csv(cleaned_01, "2001_cleaned_data.csv")

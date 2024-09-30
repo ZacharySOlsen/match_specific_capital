@@ -57,9 +57,13 @@ column_names_ind = c("ENJ_BMONTH", "ENJ_EMONTH", "ENJ_NOWRK8", "RMNUMJOBS", "mon
 column_names_alt = c("ENJ_BMONTH", "ENJ_EMONTH", "ENJ_NOWRK8", "RMNUMJOBS", "MONTHCODE", "SSUID", "PNUM")
 
 # Appending all variable names together.
-column_names = append(column_names_ind, TJB_MSUM_ALL, 5) |> append(TJB_OCC_ALL, 5) |> append(TJB_IND_ALL, 5) |> append(EJB_JOBID_ALL, 5) |> append(EJB_RSEND_ALL, 5) |> append(TJB_STRTYR_ALL, 5) |> append(EJB_EMONTH_ALL, 5) |> append(EJB_BMONTH_ALL, 5)
+column_names = append(column_names_ind, TJB_MSUM_ALL, 5) |> append(TJB_OCC_ALL, 5) |> 
+  append(TJB_IND_ALL, 5) |> append(EJB_JOBID_ALL, 5) |> append(EJB_RSEND_ALL, 5) |> 
+  append(TJB_STRTYR_ALL, 5) |> append(EJB_EMONTH_ALL, 5) |> append(EJB_BMONTH_ALL, 5)
 
-column_names_alt = append(column_names_alt, TJB_MSUM_ALL, 5) |> append(TJB_OCC_ALL_ALT, 5) |> append(TJB_IND_ALL_ALT, 5) |> append(EJB_JOBID_ALL, 5) |> append(EJB_RSEND_ALL, 5) |> append(TJB_STRTYR_ALL, 5) |> append(EJB_EMONTH_ALL, 5) |> append(EJB_BMONTH_ALL, 5)
+column_names_alt = append(column_names_alt, TJB_MSUM_ALL, 5) |> append(TJB_OCC_ALL_ALT, 5) |> 
+  append(TJB_IND_ALL_ALT, 5) |> append(EJB_JOBID_ALL, 5) |> append(EJB_RSEND_ALL, 5) |> 
+  append(TJB_STRTYR_ALL, 5) |> append(EJB_EMONTH_ALL, 5) |> append(EJB_BMONTH_ALL, 5)
 
 
 # File address for the data.
@@ -104,19 +108,43 @@ reason_separation = c(1, 2, 3, 5, 6)
 # Filtering out for an unemployment spell. Then why they lost their job.
 no_work_1 = job_data_14_WAVE1 |> filter(!is.na(enj_bmonth))
 
-no_work_1 = no_work_1 |> filter( (ejb1_rsend %in% reason_separation) | (ejb2_rsend %in% reason_separation) | (ejb3_rsend %in% reason_separation) | (ejb4_rsend %in% reason_separation) | (ejb5_rsend %in% reason_separation)  | (ejb6_rsend %in% reason_separation) | (ejb7_rsend %in% reason_separation) )
+no_work_1 = no_work_1 |> filter( (ejb1_rsend %in% reason_separation) | 
+                                   (ejb2_rsend %in% reason_separation) | 
+                                   (ejb3_rsend %in% reason_separation) | 
+                                   (ejb4_rsend %in% reason_separation) | 
+                                   (ejb5_rsend %in% reason_separation) | 
+                                   (ejb6_rsend %in% reason_separation) | 
+                                   (ejb7_rsend %in% reason_separation) )
 
 no_work_2 = job_data_14_WAVE2 |> filter(!is.na(enj_bmonth))
 
-no_work_2 = no_work_2 |> filter( (ejb1_rsend %in% reason_separation) | (ejb2_rsend %in% reason_separation) | (ejb3_rsend %in% reason_separation) | (ejb4_rsend %in% reason_separation) | (ejb5_rsend %in% reason_separation)  | (ejb6_rsend %in% reason_separation) | (ejb7_rsend %in% reason_separation) )
+no_work_2 = no_work_2 |> filter( (ejb1_rsend %in% reason_separation) | 
+                                   (ejb2_rsend %in% reason_separation) | 
+                                   (ejb3_rsend %in% reason_separation) | 
+                                   (ejb4_rsend %in% reason_separation) | 
+                                   (ejb5_rsend %in% reason_separation) | 
+                                   (ejb6_rsend %in% reason_separation) | 
+                                   (ejb7_rsend %in% reason_separation) )
 
 no_work_3 = job_data_14_WAVE3 |> filter(!is.na(enj_bmonth))
 
-no_work_3 = no_work_3 |> filter( (ejb1_rsend %in% reason_separation) | (ejb2_rsend %in% reason_separation) | (ejb3_rsend %in% reason_separation) | (ejb4_rsend %in% reason_separation) | (ejb5_rsend %in% reason_separation)  | (ejb6_rsend %in% reason_separation) | (ejb7_rsend %in% reason_separation) )
+no_work_3 = no_work_3 |> filter( (ejb1_rsend %in% reason_separation) | 
+                                   (ejb2_rsend %in% reason_separation) | 
+                                   (ejb3_rsend %in% reason_separation) | 
+                                   (ejb4_rsend %in% reason_separation) | 
+                                   (ejb5_rsend %in% reason_separation) | 
+                                   (ejb6_rsend %in% reason_separation) | 
+                                   (ejb7_rsend %in% reason_separation) )
 
 no_work_4 = job_data_14_WAVE4 |> filter(!is.na(enj_bmonth))
 
-no_work_4 = no_work_4 |> filter( (ejb1_rsend %in% reason_separation) | (ejb2_rsend %in% reason_separation) | (ejb3_rsend %in% reason_separation) | (ejb4_rsend %in% reason_separation) | (ejb5_rsend %in% reason_separation)  | (ejb6_rsend %in% reason_separation) | (ejb7_rsend %in% reason_separation) )
+no_work_4 = no_work_4 |> filter( (ejb1_rsend %in% reason_separation) | 
+                                   (ejb2_rsend %in% reason_separation) | 
+                                   (ejb3_rsend %in% reason_separation) | 
+                                   (ejb4_rsend %in% reason_separation) | 
+                                   (ejb5_rsend %in% reason_separation) | 
+                                   (ejb6_rsend %in% reason_separation) | 
+                                   (ejb7_rsend %in% reason_separation) )
 
 # Creating distance metrics
 no_work_1 = no_work_1 |> mutate(distance_jb1 = if_else(is.na(tjb1_strtyr), ejb1_bmonth - enj_emonth, NA)) |>
@@ -315,16 +343,19 @@ ssuid_no_work_3 = no_work_3 |> filter(enj_emonth == 12) |>
 
 
 pnum_no_work_1 = no_work_1 |> filter(enj_emonth == 12) |>
-  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & is.na(distance_jb7)) |>
-  distinct(pnum)
+  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & 
+           is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & 
+           is.na(distance_jb7)) |> distinct(pnum)
 
 pnum_no_work_2 = no_work_2 |> filter(enj_emonth == 12) |>
-  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & is.na(distance_jb7)) |> 
-  distinct(pnum)
+  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & 
+           is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & 
+           is.na(distance_jb7)) |> distinct(pnum)
 
 pnum_no_work_3 = no_work_3 |> filter(enj_emonth == 12) |>
-  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & is.na(distance_jb7)) |>
-  distinct(pnum)
+  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & 
+           is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & 
+           is.na(distance_jb7)) |> distinct(pnum)
 
 # Filtering the dsts.
 
@@ -428,16 +459,22 @@ rm(pnum_dst1_w2, pnum_dst1_w3, pnum_dst1_w4, pnum_dst2_w2, pnum_dst2_w3, pnum_ds
 
 # Final filtering.
 matches_no_work_1 = no_work_1 |> filter(enj_emonth == 12) |>
-  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & is.na(distance_jb7)) |> 
-  filter(pnum %in% pnum_dst_w2$pnum) |> filter(ssuid %in% ssuid_dst_w2$ssuid)
+  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & 
+           is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & 
+           is.na(distance_jb7)) |>  filter(pnum %in% pnum_dst_w2$pnum) |> 
+  filter(ssuid %in% ssuid_dst_w2$ssuid)
 
 matches_no_work_2 = no_work_2 |> filter(enj_emonth == 12) |>
-  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & is.na(distance_jb7)) |> 
-  filter(pnum %in% pnum_dst_w3$pnum) |> filter(ssuid %in% ssuid_dst_w3$ssuid)
+  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & 
+           is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & 
+           is.na(distance_jb7)) |> filter(pnum %in% pnum_dst_w3$pnum) |> 
+  filter(ssuid %in% ssuid_dst_w3$ssuid)
 
 matches_no_work_3 = no_work_3 |> filter(enj_emonth == 12) |>
-  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & is.na(distance_jb7)) |> 
-  filter(pnum %in% pnum_dst_w4$pnum) |> filter(ssuid %in% ssuid_dst_w4$ssuid)
+  filter(is.na(distance_jb1) & is.na(distance_jb2) & is.na(distance_jb3) & 
+           is.na(distance_jb4) & is.na(distance_jb5) & is.na(distance_jb6) & 
+           is.na(distance_jb7)) |> filter(pnum %in% pnum_dst_w4$pnum) |> 
+  filter(ssuid %in% ssuid_dst_w4$ssuid)
 
 # Selecting job variables to keep.
 
@@ -456,11 +493,14 @@ year_three_four_match = matches_no_work_3 |> inner_join(dst_w4, by = c("pnum", "
 
 
 # Creating columns of true start dates.
-year_one_two_match = year_one_two_match |> mutate(end_old_job = enj_bmonth_one) |> mutate(begin_new_job = enj_emonth_two + 12)
+year_one_two_match = year_one_two_match |> mutate(end_old_job = enj_bmonth_one) |> 
+  mutate(begin_new_job = enj_emonth_two + 12)
 
-year_two_three_match = year_two_three_match |> mutate(end_old_job = enj_bmonth_two + 12) |> mutate(begin_new_job = enj_emonth_three + 24)
+year_two_three_match = year_two_three_match |> mutate(end_old_job = enj_bmonth_two + 12) |> 
+  mutate(begin_new_job = enj_emonth_three + 24)
 
-year_three_four_match = year_three_four_match |> mutate(end_old_job = enj_bmonth_three + 24) |> mutate(begin_new_job = enj_emonth_four + 36)
+year_three_four_match = year_three_four_match |> mutate(end_old_job = enj_bmonth_three + 24) |> 
+  mutate(begin_new_job = enj_emonth_four + 36)
 
 #Now will separate by which have distance values by variable.
 
@@ -471,7 +511,7 @@ year_one_two_match_dst1 = year_one_two_match |> filter(!is.na(distance_jb1_two))
   select(!contains("7"))
 
 year_one_two_match_dst2 = year_one_two_match |>
-  filter(!is.na(distance_jb2_two)) |> select(!ends_with("_one")) |>  select(!contains("1") ) |> 
+  filter(!is.na(distance_jb2_two)) |> select(!ends_with("_one")) |> select(!contains("1") ) |> 
   select(!contains("3") ) |> select(!contains("4")) |> select(!contains("5")) |> 
   select(!contains("6")) |> select(!contains("7"))
 
@@ -593,29 +633,97 @@ dst4_w4 = dst4_w4 |> select(!contains("1") ) |> select(!contains("2") ) |>
   select(!contains("7"))
 
 # Rename variables.
-dst1_labels = c("ejb_bmonth" = "ejb1_bmonth", "ejb_emonth" = "ejb1_emonth", "tjb_strtyr" = "tjb1_strtyr", "ejb_rsend" = "ejb1_rsend", "ejb_jobid" = "ejb1_jobid", "tjb_ind" = "tjb1_ind", "tjb_occ" = "tjb1_occ", "tjb_msum" = "tjb1_msum", "distance" = "distance_jb1")
+dst1_labels = c("ejb_bmonth" = "ejb1_bmonth", "ejb_emonth" = "ejb1_emonth", 
+                "tjb_strtyr" = "tjb1_strtyr", "ejb_rsend" = "ejb1_rsend", 
+                "ejb_jobid" = "ejb1_jobid", "tjb_ind" = "tjb1_ind", "tjb_occ" = "tjb1_occ", 
+                "tjb_msum" = "tjb1_msum", "distance" = "distance_jb1")
 
-dst2_labels = c("ejb_bmonth" = "ejb2_bmonth", "ejb_emonth" = "ejb2_emonth", "tjb_strtyr" = "tjb2_strtyr", "ejb_rsend" = "ejb2_rsend", "ejb_jobid" = "ejb2_jobid", "tjb_ind" = "tjb2_ind", "tjb_occ" = "tjb2_occ", "tjb_msum" = "tjb2_msum", "distance" = "distance_jb2")
+dst2_labels = c("ejb_bmonth" = "ejb2_bmonth", "ejb_emonth" = "ejb2_emonth", 
+                "tjb_strtyr" = "tjb2_strtyr", "ejb_rsend" = "ejb2_rsend", 
+                "ejb_jobid" = "ejb2_jobid", "tjb_ind" = "tjb2_ind", "tjb_occ" = "tjb2_occ", 
+                "tjb_msum" = "tjb2_msum", "distance" = "distance_jb2")
 
-dst3_labels = c("ejb_bmonth" = "ejb3_bmonth", "ejb_emonth" = "ejb3_emonth", "tjb_strtyr" = "tjb3_strtyr", "ejb_rsend" = "ejb3_rsend", "ejb_jobid" = "ejb3_jobid", "tjb_ind" = "tjb3_ind", "tjb_occ" = "tjb3_occ", "tjb_msum" = "tjb3_msum", "distance" = "distance_jb3")
+dst3_labels = c("ejb_bmonth" = "ejb3_bmonth", "ejb_emonth" = "ejb3_emonth", 
+                "tjb_strtyr" = "tjb3_strtyr", "ejb_rsend" = "ejb3_rsend", 
+                "ejb_jobid" = "ejb3_jobid", "tjb_ind" = "tjb3_ind", "tjb_occ" = "tjb3_occ", 
+                "tjb_msum" = "tjb3_msum", "distance" = "distance_jb3")
 
-dst4_labels = c("ejb_bmonth" = "ejb4_bmonth", "ejb_emonth" = "ejb4_emonth", "tjb_strtyr" = "tjb4_strtyr", "ejb_rsend" = "ejb4_rsend", "ejb_jobid" = "ejb4_jobid", "tjb_ind" = "tjb4_ind", "tjb_occ" = "tjb4_occ", "tjb_msum" = "tjb4_msum", "distance" = "distance_jb4")
+dst4_labels = c("ejb_bmonth" = "ejb4_bmonth", "ejb_emonth" = "ejb4_emonth", 
+                "tjb_strtyr" = "tjb4_strtyr", "ejb_rsend" = "ejb4_rsend", 
+                "ejb_jobid" = "ejb4_jobid", "tjb_ind" = "tjb4_ind", "tjb_occ" = "tjb4_occ", 
+                "tjb_msum" = "tjb4_msum", "distance" = "distance_jb4")
 
-y_one_two_labels_dst1 = c("enj_bmonth" = "enj_bmonth_two", "enj_emonth" = "enj_emonth_two", "enj_nowrk8" = "enj_nowrk8_two", "rmnumjobs" = "rmnumjobs_two", "monthcode" = "monthcode_two", "ejb_bmonth" = "ejb1_bmonth_two", "ejb_emonth" = "ejb1_emonth_two", "tjb_strtyr" = "tjb1_strtyr_two", "ejb_rsend" = "ejb1_rsend_two", "ejb_jobid" = "ejb1_jobid_two", "tjb_ind" = "tjb1_ind_two", "tjb_occ" = "tjb1_occ_two", "tjb_msum" = "tjb1_msum_two", "distance" = "distance_jb1_two", "longitudinal_month" = "longitudinal_month_two")
+y_one_two_labels_dst1 = c("enj_bmonth" = "enj_bmonth_two", "enj_emonth" = "enj_emonth_two", 
+                          "enj_nowrk8" = "enj_nowrk8_two", "rmnumjobs" = "rmnumjobs_two", 
+                          "monthcode" = "monthcode_two", "ejb_bmonth" = "ejb1_bmonth_two", 
+                          "ejb_emonth" = "ejb1_emonth_two", "tjb_strtyr" = "tjb1_strtyr_two", 
+                          "ejb_rsend" = "ejb1_rsend_two", "ejb_jobid" = "ejb1_jobid_two", 
+                          "tjb_ind" = "tjb1_ind_two", "tjb_occ" = "tjb1_occ_two", 
+                          "tjb_msum" = "tjb1_msum_two", "distance" = "distance_jb1_two", 
+                          "longitudinal_month" = "longitudinal_month_two")
 
-y_one_two_labels_dst2 = c("enj_bmonth" = "enj_bmonth_two", "enj_emonth" = "enj_emonth_two", "enj_nowrk8" = "enj_nowrk8_two", "rmnumjobs" = "rmnumjobs_two", "monthcode" = "monthcode_two", "ejb_bmonth" = "ejb2_bmonth_two", "ejb_emonth" = "ejb2_emonth_two", "tjb_strtyr" = "tjb2_strtyr_two", "ejb_rsend" = "ejb2_rsend_two", "ejb_jobid" = "ejb2_jobid_two", "tjb_ind" = "tjb2_ind_two", "tjb_occ" = "tjb2_occ_two", "tjb_msum" = "tjb2_msum_two", "distance" = "distance_jb2_two", "longitudinal_month" = "longitudinal_month_two")
+y_one_two_labels_dst2 = c("enj_bmonth" = "enj_bmonth_two", "enj_emonth" = "enj_emonth_two", 
+                          "enj_nowrk8" = "enj_nowrk8_two", "rmnumjobs" = "rmnumjobs_two", 
+                          "monthcode" = "monthcode_two", "ejb_bmonth" = "ejb2_bmonth_two", 
+                          "ejb_emonth" = "ejb2_emonth_two", "tjb_strtyr" = "tjb2_strtyr_two", 
+                          "ejb_rsend" = "ejb2_rsend_two", "ejb_jobid" = "ejb2_jobid_two", 
+                          "tjb_ind" = "tjb2_ind_two", "tjb_occ" = "tjb2_occ_two", 
+                          "tjb_msum" = "tjb2_msum_two", "distance" = "distance_jb2_two", 
+                          "longitudinal_month" = "longitudinal_month_two")
 
-y_one_two_labels_dst3 = c("enj_bmonth" = "enj_bmonth_two", "enj_emonth" = "enj_emonth_two", "enj_nowrk8" = "enj_nowrk8_two", "rmnumjobs" = "rmnumjobs_two", "monthcode" = "monthcode_two", "ejb_bmonth" = "ejb3_bmonth_two", "ejb_emonth" = "ejb3_emonth_two", "tjb_strtyr" = "tjb3_strtyr_two", "ejb_rsend" = "ejb3_rsend_two", "ejb_jobid" = "ejb3_jobid_two", "tjb_ind" = "tjb3_ind_two", "tjb_occ" = "tjb3_occ_two", "tjb_msum" = "tjb3_msum_two", "distance" = "distance_jb3_two", "longitudinal_month" = "longitudinal_month_two")
+y_one_two_labels_dst3 = c("enj_bmonth" = "enj_bmonth_two", "enj_emonth" = "enj_emonth_two", 
+                          "enj_nowrk8" = "enj_nowrk8_two", "rmnumjobs" = "rmnumjobs_two", 
+                          "monthcode" = "monthcode_two", "ejb_bmonth" = "ejb3_bmonth_two", 
+                          "ejb_emonth" = "ejb3_emonth_two", "tjb_strtyr" = "tjb3_strtyr_two", 
+                          "ejb_rsend" = "ejb3_rsend_two", "ejb_jobid" = "ejb3_jobid_two", 
+                          "tjb_ind" = "tjb3_ind_two", "tjb_occ" = "tjb3_occ_two", 
+                          "tjb_msum" = "tjb3_msum_two", "distance" = "distance_jb3_two", 
+                          "longitudinal_month" = "longitudinal_month_two")
 
-y_one_two_labels_dst4 = c("enj_bmonth" = "enj_bmonth_two", "enj_emonth" = "enj_emonth_two", "enj_nowrk8" = "enj_nowrk8_two", "rmnumjobs" = "rmnumjobs_two", "monthcode" = "monthcode_two", "ejb_bmonth" = "ejb4_bmonth_two", "ejb_emonth" = "ejb4_emonth_two", "tjb_strtyr" = "tjb4_strtyr_two", "ejb_rsend" = "ejb4_rsend_two", "ejb_jobid" = "ejb4_jobid_two", "tjb_ind" = "tjb4_ind_two", "tjb_occ" = "tjb4_occ_two", "tjb_msum" = "tjb4_msum_two", "distance" = "distance_jb4_two", "longitudinal_month" = "longitudinal_month_two")
+y_one_two_labels_dst4 = c("enj_bmonth" = "enj_bmonth_two", "enj_emonth" = "enj_emonth_two", 
+                          "enj_nowrk8" = "enj_nowrk8_two", "rmnumjobs" = "rmnumjobs_two", 
+                          "monthcode" = "monthcode_two", "ejb_bmonth" = "ejb4_bmonth_two", 
+                          "ejb_emonth" = "ejb4_emonth_two", "tjb_strtyr" = "tjb4_strtyr_two", 
+                          "ejb_rsend" = "ejb4_rsend_two", "ejb_jobid" = "ejb4_jobid_two", 
+                          "tjb_ind" = "tjb4_ind_two", "tjb_occ" = "tjb4_occ_two", 
+                          "tjb_msum" = "tjb4_msum_two", "distance" = "distance_jb4_two",
+                          "longitudinal_month" = "longitudinal_month_two")
 
-y_two_three_labels_dst1 = c("enj_bmonth" = "enj_bmonth_three", "enj_emonth" = "enj_emonth_three", "enj_nowrk8" = "enj_nowrk8_three", "rmnumjobs" = "rmnumjobs_three", "monthcode" = "monthcode_three", "ejb_bmonth" = "ejb1_bmonth_three", "ejb_emonth" = "ejb1_emonth_three", "tjb_strtyr" = "tjb1_strtyr_three", "ejb_rsend" = "ejb1_rsend_three", "ejb_jobid" = "ejb1_jobid_three", "tjb_ind" = "tjb1_ind_three", "tjb_occ" = "tjb1_occ_three", "tjb_msum" = "tjb1_msum_three", "distance" = "distance_jb1_three", "longitudinal_month" = "longitudinal_month_three")
+y_two_three_labels_dst1 = c("enj_bmonth" = "enj_bmonth_three", "enj_emonth" = "enj_emonth_three", 
+                            "enj_nowrk8" = "enj_nowrk8_three", "rmnumjobs" = "rmnumjobs_three", 
+                            "monthcode" = "monthcode_three", "ejb_bmonth" = "ejb1_bmonth_three", 
+                            "ejb_emonth" = "ejb1_emonth_three", "tjb_strtyr" = "tjb1_strtyr_three", 
+                            "ejb_rsend" = "ejb1_rsend_three", "ejb_jobid" = "ejb1_jobid_three", 
+                            "tjb_ind" = "tjb1_ind_three", "tjb_occ" = "tjb1_occ_three", 
+                            "tjb_msum" = "tjb1_msum_three", "distance" = "distance_jb1_three", 
+                            "longitudinal_month" = "longitudinal_month_three")
 
-y_two_three_labels_dst2 = c("enj_bmonth" = "enj_bmonth_three", "enj_emonth" = "enj_emonth_three", "enj_nowrk8" = "enj_nowrk8_three", "rmnumjobs" = "rmnumjobs_three", "monthcode" = "monthcode_three", "ejb_bmonth" = "ejb2_bmonth_three", "ejb_emonth" = "ejb2_emonth_three", "tjb_strtyr" = "tjb2_strtyr_three", "ejb_rsend" = "ejb2_rsend_three", "ejb_jobid" = "ejb2_jobid_three", "tjb_ind" = "tjb2_ind_three", "tjb_occ" = "tjb2_occ_three", "tjb_msum" = "tjb2_msum_three", "distance" = "distance_jb2_three", "longitudinal_month" = "longitudinal_month_three")
+y_two_three_labels_dst2 = c("enj_bmonth" = "enj_bmonth_three", "enj_emonth" = "enj_emonth_three", 
+                            "enj_nowrk8" = "enj_nowrk8_three", "rmnumjobs" = "rmnumjobs_three", 
+                            "monthcode" = "monthcode_three", "ejb_bmonth" = "ejb2_bmonth_three", 
+                            "ejb_emonth" = "ejb2_emonth_three", "tjb_strtyr" = "tjb2_strtyr_three", 
+                            "ejb_rsend" = "ejb2_rsend_three", "ejb_jobid" = "ejb2_jobid_three", 
+                            "tjb_ind" = "tjb2_ind_three", "tjb_occ" = "tjb2_occ_three", 
+                            "tjb_msum" = "tjb2_msum_three", "distance" = "distance_jb2_three", 
+                            "longitudinal_month" = "longitudinal_month_three")
 
-y_three_four_labels_dst1 = c("enj_bmonth" = "enj_bmonth_four", "enj_emonth" = "enj_emonth_four", "enj_nowrk8" = "enj_nowrk8_four", "rmnumjobs" = "rmnumjobs_four", "monthcode" = "monthcode_four", "ejb_bmonth" = "ejb1_bmonth_four", "ejb_emonth" = "ejb1_emonth_four", "tjb_strtyr" = "tjb1_strtyr_four", "ejb_rsend" = "ejb1_rsend_four", "ejb_jobid" = "ejb1_jobid_four", "tjb_ind" = "tjb1_ind_four", "tjb_occ" = "tjb1_occ_four", "tjb_msum" = "tjb1_msum_four", "distance" = "distance_jb1_four", "longitudinal_month" = "longitudinal_month_four")
+y_three_four_labels_dst1 = c("enj_bmonth" = "enj_bmonth_four", "enj_emonth" = "enj_emonth_four", 
+                             "enj_nowrk8" = "enj_nowrk8_four", "rmnumjobs" = "rmnumjobs_four", 
+                             "monthcode" = "monthcode_four", "ejb_bmonth" = "ejb1_bmonth_four", 
+                             "ejb_emonth" = "ejb1_emonth_four", "tjb_strtyr" = "tjb1_strtyr_four", 
+                             "ejb_rsend" = "ejb1_rsend_four", "ejb_jobid" = "ejb1_jobid_four", 
+                             "tjb_ind" = "tjb1_ind_four", "tjb_occ" = "tjb1_occ_four", 
+                             "tjb_msum" = "tjb1_msum_four", "distance" = "distance_jb1_four", 
+                             "longitudinal_month" = "longitudinal_month_four")
 
-y_three_four_labels_dst2 = c("enj_bmonth" = "enj_bmonth_four", "enj_emonth" = "enj_emonth_four", "enj_nowrk8" = "enj_nowrk8_four", "rmnumjobs" = "rmnumjobs_four", "monthcode" = "monthcode_four", "ejb_bmonth" = "ejb2_bmonth_four", "ejb_emonth" = "ejb2_emonth_four", "tjb_strtyr" = "tjb2_strtyr_four", "ejb_rsend" = "ejb2_rsend_four", "ejb_jobid" = "ejb2_jobid_four", "tjb_ind" = "tjb2_ind_four", "tjb_occ" = "tjb2_occ_four", "tjb_msum" = "tjb2_msum_four", "distance" = "distance_jb2_four", "longitudinal_month" = "longitudinal_month_four")
+y_three_four_labels_dst2 = c("enj_bmonth" = "enj_bmonth_four", "enj_emonth" = "enj_emonth_four", 
+                             "enj_nowrk8" = "enj_nowrk8_four", "rmnumjobs" = "rmnumjobs_four", 
+                             "monthcode" = "monthcode_four", "ejb_bmonth" = "ejb2_bmonth_four", 
+                             "ejb_emonth" = "ejb2_emonth_four", "tjb_strtyr" = "tjb2_strtyr_four", 
+                             "ejb_rsend" = "ejb2_rsend_four", "ejb_jobid" = "ejb2_jobid_four", 
+                             "tjb_ind" = "tjb2_ind_four", "tjb_occ" = "tjb2_occ_four", 
+                             "tjb_msum" = "tjb2_msum_four", "distance" = "distance_jb2_four", 
+                             "longitudinal_month" = "longitudinal_month_four")
 
 # Renaming
 dst1_w1 = dst1_w1 |> rename(any_of(dst1_labels))
@@ -694,13 +802,22 @@ longitudinal_month_1_2 = year_one_two_match |> distinct(longitudinal_month)
 longitudinal_month_2_3 = year_two_three_match |> distinct(longitudinal_month)
 longitudinal_month_3_4 = year_three_four_match |> distinct(longitudinal_month)
 
-wave_2_no_work = wave_2_no_work |> filter( !( (ssuid %in% ssuid_y_1_2$ssuid) & (pnum %in% pnum_y_1_2$pnum) & (longitudinal_month %in% longitudinal_month_1_2$longitudinal_month)) )
+wave_2_no_work = wave_2_no_work |> filter( !( (ssuid %in% ssuid_y_1_2$ssuid) & 
+                                                (pnum %in% pnum_y_1_2$pnum) & 
+                                                (longitudinal_month %in% longitudinal_month_1_2$longitudinal_month)) )
+
 wave_2_no_work = wave_2_no_work |> bind_rows(year_one_two_match)
 
-wave_3_no_work = wave_3_no_work |> filter( !( (ssuid %in% ssuid_y_2_3$ssuid) & (pnum %in% pnum_y_2_3$pnum) & (longitudinal_month %in% longitudinal_month_2_3$longitudinal_month)) )
+wave_3_no_work = wave_3_no_work |> filter( !( (ssuid %in% ssuid_y_2_3$ssuid) & 
+                                                (pnum %in% pnum_y_2_3$pnum) & 
+                                                (longitudinal_month %in% longitudinal_month_2_3$longitudinal_month)) )
+
 wave_3_no_work = wave_3_no_work |> bind_rows(year_two_three_match)
 
-wave_4_no_work = wave_4_no_work |> filter( !( (ssuid %in% ssuid_y_3_4$ssuid) & (pnum %in% pnum_y_3_4$pnum) & (longitudinal_month %in% longitudinal_month_3_4$longitudinal_month)) )
+wave_4_no_work = wave_4_no_work |> filter( !( (ssuid %in% ssuid_y_3_4$ssuid) & 
+                                                (pnum %in% pnum_y_3_4$pnum) & 
+                                                (longitudinal_month %in% longitudinal_month_3_4$longitudinal_month)) )
+
 wave_4_no_work = wave_4_no_work |> bind_rows(year_three_four_match)
 
 # Joining with full sample to get month before and after wages.
